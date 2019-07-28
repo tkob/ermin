@@ -1,0 +1,12 @@
+type rate = decimal(9, 2)
+type exchange_rate = rate
+
+type product_name = name
+type name = varchar(40)
+
+type id = integer
+type person_id = id
+type employee_id = person_id
+
+code status = "NEW" "WORKING" "CLOSED"
+type bug_status = status

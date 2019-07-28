@@ -1,0 +1,104 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+    id "io.freefair.lombok" version "3.8.1"
+    id "com.diffplug.gradle.spotless" version "3.23.1"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+configurations {
+    antTasks
+}
+
+ext.jflexVersion = '1.7.0'
+ext.jaxbVersion = '2.4.0-b180830.0438'
+
+dependencies {
+    compile "de.jflex:jflex:$jflexVersion"
+    compile "org.glassfish.jaxb:jaxb-runtime:$jaxbVersion"
+    testCompile 'junit:junit:4.11'
+
+    antTasks "de.jflex:jflex:$jflexVersion"
+    antTasks 'com.github.vbmacher:java-cup:11b-20160615'
+    antTasks "org.glassfish.jaxb:jaxb-xjc:$jaxbVersion"
+}
+
+group = 'yokohama.lang'
+version = '1.0-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+eclipse.jdt.file {
+    withProperties { properties ->
+        def formatter = new XmlSlurper().parse('config/eclipse/formatter.xml')
+        formatter.profile.setting.each {
+            properties.put(it.@id as String, it.@value as String)
+        }
+    }
+}
+
+spotless {
+    java {
+        target project.fileTree(project.rootDir) {
+            include 'src/*/java/**/*.java'
+        }
+        eclipse().configFile 'config/eclipse/formatter.xml'
+    }
+}
+
+sourceSets.main.java.srcDirs 'build/generated/sources/parser/java'
+sourceSets.main.java.srcDirs 'build/generated/sources/jaxb/java'
+
+task bnfc(type: Exec) {
+    commandLine 'bnfc --java --jflex -p yokohama.lang -o build/generated/sources/parser/java ermin.cf'.split()
+}
+
+task cup {
+    doLast {
+        ant.taskdef(
+            name: 'jflex',
+            classname: 'jflex.anttask.JFlexTask',
+            classpath: configurations.antTasks.asPath)
+        ant.taskdef(
+            name: 'cup',
+            classname: 'java_cup.anttask.CUPTask',
+            classpath: configurations.antTasks.asPath)
+
+        ant.jflex(
+            file: 'build/generated/sources/parser/java/yokohama/lang/ermin/Yylex',
+            destdir: 'build/generated/sources/parser/java')
+        ant.cup(
+            srcfile: 'build/generated/sources/parser/java/yokohama/lang/ermin/ermin.cup',
+            destdir: 'build/generated/sources/parser/java',
+            parser: 'parser',
+            interface: true,
+            locations: false)
+    }
+}
+
+cup.dependsOn(bnfc)
+compileJava.dependsOn(cup)
+tasks.eclipse.dependsOn(cup)
+
+task jaxb {
+    def destdir = file('build/generated/sources/jaxb/java')
+
+    doLast {
+        destdir.mkdirs()
+
+        ant.taskdef(
+            name: 'xjc',
+            classname: 'com.sun.tools.xjc.XJCTask',
+            classpath: configurations.antTasks.asPath)
+        ant.xjc(
+            destdir: destdir,
+            package: 'yokohama.lang.reladomo',
+            schema: 'src/main/xsd/mithraobject.xsd')
+    }
+}
+
+compileJava.dependsOn(jaxb)
+tasks.eclipse.dependsOn(jaxb)

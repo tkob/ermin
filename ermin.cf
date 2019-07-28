@@ -1,0 +1,47 @@
+TopDefinitions. Top ::= [Def] ;
+
+TypeDef.          Def ::= "type" Ident "=" Type ;
+CodeDef.          Def ::= "code" Ident "=" [Code] ;
+EntityDef.        Def ::= "entity" Ident "identified" "by" [Ident] [Attribute] ;
+KeyOnlyEntityDef. Def ::= "entity" Ident "identified" "by" [Ident] ;
+RelationshipDef.  Def ::= "relationship" Ident ":" RelationshipType ;
+terminator nonempty Def "" ;
+separator nonempty Ident "*" ;
+
+CharType.                  Type ::= "char" "(" Integer ")" ;
+VarCharType.               Type ::= "varchar" "(" Integer ")" ;
+ClobType.                  Type ::= "clob" ;
+BlobType.                  Type ::= "blob" ;
+DecimalType.               Type ::= "decimal" ;
+DecimalPrecisionType.      Type ::= "decimal" "(" Integer ")" ;
+DecimalPrecisionScaleType. Type ::= "decimal" "(" Integer "," Integer ")" ;
+IntegerType.               Type ::= "integer" ;
+DateType.                  Type ::= "date" ;
+IdentType.                 Type ::= Ident ; -- identifier can refer to type or code
+
+ProductRelationship.        RelationshipType  ::= RelationshipType "*" RelationshipType1 ;
+EntityRelationship.         RelationshipType1 ::= Multiplicity Ident ;
+DefaultEntityRelationship.  RelationshipType1 ::= Ident ;
+coercions RelationshipType 1 ;
+
+OneMultiplicity. Multiplicity ::= "one" ;
+ZeroOrOneMultiplicity. Multiplicity ::= "zero" "or" "one" ;
+ZeroOrMoreMultiplicity. Multiplicity ::= "zero" "or" "more" ;
+OneOreMoreMultiplicity. Multiplicity ::= "one" "or" "more" ;
+NumericOneMultiplicity. Multiplicity ::= "1" ;
+NumericZeroOrOneMultiplicity. Multiplicity ::= "0,1" ;
+NumericZeroOrMoreMultiplicity. Multiplicity ::= "0.." ;
+NumericOneOreMoreMultiplicity. Multiplicity ::= "1.." ;
+
+StringCode. Code ::= String ;
+terminator nonempty Code "" ;
+
+-- KeyAttribute.       Attribute ::= "key" Ident ":" Type ;
+MandatoryAttribute. Attribute ::= "attribute" Ident ":" Type ;
+OptionalAttribute.  Attribute ::= "optional" Ident ":" Type ;
+UniqueAttribute.    Attribute ::= "unique" Ident ":" Type ;
+terminator nonempty Attribute "" ;
+
+comment "--" ;
+comment "{--" "--}" ;
+
