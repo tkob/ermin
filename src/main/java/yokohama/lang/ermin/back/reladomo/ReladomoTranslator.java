@@ -1,13 +1,7 @@
 package yokohama.lang.ermin.back.reladomo;
 
-import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.entity.ErminEntity;
