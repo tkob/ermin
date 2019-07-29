@@ -59,8 +59,8 @@ public class FrontEndProcessor {
                         List<EntityDef> entityDefs = filterEntityDef(p.listdef_.stream())
                                 .collect(Collectors.toList());
                         List<ErminName> entityNames = entityDefs.stream().map(
-                                entityDef -> new ErminName(entityDef.ident_)).collect(
-                                        Collectors.toList());
+                                entityDef -> ErminName.fromSnake(entityDef.ident_))
+                                .collect(Collectors.toList());
                         return entityDefs.stream().map(entityDef -> toErminEntity(
                                 entityDef, typeResolver, entityNames)).collect(Collectors
                                         .toList());
@@ -97,10 +97,10 @@ public class FrontEndProcessor {
             throw new RuntimeException();
         }
 
-        return new ErminEntity(new ErminName(entityDef.ident_), typeKey, entityKeys, entityDef.listattribute_
-                .stream().map(attribute -> attribute.accept(
-                        absynAttributeToErminAttribute, typeResolver)).collect(Collectors
-                                .toList()));
+        return new ErminEntity(ErminName.fromSnake(
+                entityDef.ident_), typeKey, entityKeys, entityDef.listattribute_.stream()
+                        .map(attribute -> attribute.accept(absynAttributeToErminAttribute,
+                                typeResolver)).collect(Collectors.toList()));
     }
 
     public Stream<EntityDef> filterEntityDef(final Stream<Def> defs) {
