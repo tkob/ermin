@@ -72,14 +72,14 @@ public class FrontEndProcessor {
     public ErminEntity toErminEntity(EntityDef entityDef, TypeResolver typeResolver,
             Collection<ErminName> entityNames) {
         Map<Boolean, List<ErminName>> entityKeysAndOthers = entityDef.listident_.stream()
-                .map(ident -> new ErminName(ident)).collect(Collectors.partitioningBy(
-                        entityName -> entityNames.contains(entityName)));
+                .map(ident -> ErminName.fromSnake(ident)).collect(Collectors
+                        .partitioningBy(entityName -> entityNames.contains(entityName)));
 
         List<ErminName> entityKeys = entityKeysAndOthers.get(true);
 
         Map<Boolean, List<ErminName>> typeKeyAndOthers = entityKeysAndOthers.get(false)
-                .stream().collect(Collectors.partitioningBy(entityName -> entityNames
-                        .contains(entityName)));
+                .stream().collect(Collectors.partitioningBy(entityName -> typeResolver
+                        .hasName(entityName.toString())));
 
         List<ErminName> others = typeKeyAndOthers.get(false);
         if (!others.isEmpty()) {
