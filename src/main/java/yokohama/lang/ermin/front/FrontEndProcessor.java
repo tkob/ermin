@@ -81,9 +81,13 @@ public class FrontEndProcessor {
                 .stream().collect(Collectors.partitioningBy(entityName -> entityNames
                         .contains(entityName)));
 
-        List<ErminName> typeKeys = typeKeyAndOthers.get(true);
         List<ErminName> others = typeKeyAndOthers.get(false);
+        if (!others.isEmpty()) {
+            throw new RuntimeException(others.stream().map(ErminName::toString).collect(
+                    Collectors.joining(" ")));
+        }
 
+        List<ErminName> typeKeys = typeKeyAndOthers.get(true);
         Optional<ErminName> typeKey;
         if (typeKeys.isEmpty()) {
             typeKey = Optional.empty();
