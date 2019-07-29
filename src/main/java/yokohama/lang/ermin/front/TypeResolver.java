@@ -8,4 +8,6 @@ public interface TypeResolver {
     Optional<ErminType> resolve(String name);
 
     ErminType resolveOrThrow(String name);
+
+    boolean hasName(String name);
 }

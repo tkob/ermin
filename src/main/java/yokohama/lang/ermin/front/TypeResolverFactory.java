@@ -184,6 +184,11 @@ public class TypeResolverFactory {
                 return resolve(name).orElseThrow(
                         () -> new RuntimeException("unresolved type or code: " + name));
             }
+
+            @Override
+            public boolean hasName(String name) {
+                return nameToType.containsKey(name);
+            }
         };
 
     }
