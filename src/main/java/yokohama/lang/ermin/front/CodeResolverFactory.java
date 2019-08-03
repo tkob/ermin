@@ -64,19 +64,8 @@ public class CodeResolverFactory {
             }
 
             @Override
-            public Iterable<String> resolveOrThrow(String name) {
-                return resolve(name).orElseThrow(
-                        () -> new RuntimeException("unresolved code: " + name));
-            }
-
-            @Override
             public Iterable<String> getNames() {
                 return nameToValues.keySet();
-            }
-
-            @Override
-            public boolean hasName(String name) {
-                return nameToValues.containsKey(name);
             }
         };
 
