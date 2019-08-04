@@ -7,6 +7,7 @@ import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.entity.ErminEntity;
 import yokohama.lang.ermin.front.ErminTuple;
 import yokohama.lang.ermin.front.FrontEndProcessor;
+import yokohama.lang.ermin.front.Resolver;
 import yokohama.lang.ermin.front.TypeResolver;
 import yokohama.lang.ermin.type.ErminBlobType;
 import yokohama.lang.ermin.type.ErminCharType;
@@ -31,11 +32,32 @@ public class ReladomoTranslator {
 
     public Iterable<MithraObjectType> toMithraObjects(final ErminTuple erminTuple) {
         return erminTuple.getEntities().stream().map(entityDef -> toMithraObject(
-                entityDef, erminTuple.getTypeResolver())).collect(Collectors.toList());
+                entityDef, erminTuple.getEntityResolver(), erminTuple.getEntities(),
+                erminTuple.getTypeResolver())).collect(Collectors.toList());
+    }
+
+    void accumulatePrimaryKeys(final ErminEntity entity,
+            final Resolver<ErminEntity> entityResolver,
+            final List<AttributeType> attributes) {
+
+        entity.getEntityKeys().forEach(entityKey -> {
+            entityResolver.resolve(entityKey.toString()).ifPresent(keyEntity -> {
+                accumulatePrimaryKeys(keyEntity, entityResolver, attributes);
+            });
+        });
+        entity.getTypeKey().ifPresent(typeKey -> {
+            final AttributeType attributeType = factory.createAttributeType();
+            attributeType.setName(typeKey.getName().toString());
+            attributeType.setColumnName(typeKey.getName().toString());
+            attributeType.setPrimaryKey(true);
+            typeKey.getType().accept(new ReladomoJavaTypeSetter(attributeType));
+            attributes.add(attributeType);
+        });
     }
 
     MithraObjectType toMithraObject(final ErminEntity entity,
-            final TypeResolver typeResolver) {
+            final Resolver<ErminEntity> entityResolver,
+            final Iterable<ErminEntity> entities, final TypeResolver typeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
         mithraObject.setPackageName("yokohama.lang.test");
@@ -43,6 +65,8 @@ public class ReladomoTranslator {
         mithraObject.setDefaultTable(entity.getName().toString());
         final List<AttributeType> attributes = mithraObject.getAttribute();
         final List<RelationshipType> relationships = mithraObject.getRelationship();
+
+        accumulatePrimaryKeys(entity, entityResolver, attributes);
 
         // add non-key attributes
         attributes.addAll(entity.getAttributes().stream().map(attribute -> toAttribute(
