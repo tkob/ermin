@@ -3,26 +3,36 @@ package yokohama.lang.ermin.front;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
+import yokohama.lang.ermin.Absyn.CharIdType;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
+import yokohama.lang.ermin.Absyn.IdentifierDef;
+import yokohama.lang.ermin.Absyn.IdentifierType;
+import yokohama.lang.ermin.Absyn.IntegerIdType;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.ListAttribute;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
+import yokohama.lang.ermin.Absyn.VarCharIdType;
+import yokohama.lang.ermin.attribute.ErminAttribute;
+import yokohama.lang.ermin.attribute.ErminKey;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
+import yokohama.lang.ermin.type.ErminCharType;
+import yokohama.lang.ermin.type.ErminIntegerType;
+import yokohama.lang.ermin.type.ErminVarCharType;
 
 public class FrontEndProcessor {
 
@@ -33,6 +43,8 @@ public class FrontEndProcessor {
     CodeResolverFactory codeResolverFactory = new CodeResolverFactory();
 
     TypeResolverFactory typeResolverFactory = new TypeResolverFactory();
+
+    IdentifierResolverFactory identifierResolverFactory = new IdentifierResolverFactory();
 
     public ErminTuple process(InputStream is) throws Exception {
         final Yylex l = new Yylex(new InputStreamReader(is));
@@ -50,6 +62,7 @@ public class FrontEndProcessor {
         final CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
         final TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top,
                 codeResolver);
+        final TypeResolver identifierResolver = identifierResolverFactory.fromAbsyn(top);
 
         final List<ErminEntity> entities = top.accept(
                 new Top.Visitor<List<ErminEntity>, TypeResolver>() {
@@ -58,49 +71,52 @@ public class FrontEndProcessor {
                             final TypeResolver typeResolver) {
                         List<EntityDef> entityDefs = filterEntityDef(p.listdef_.stream())
                                 .collect(Collectors.toList());
+
                         List<ErminName> entityNames = entityDefs.stream().map(
                                 entityDef -> ErminName.fromSnake(entityDef.ident_))
                                 .collect(Collectors.toList());
+
                         return entityDefs.stream().map(entityDef -> toErminEntity(
-                                entityDef, typeResolver, entityNames)).collect(Collectors
-                                        .toList());
+                                entityDef, typeResolver, identifierResolver, entityNames))
+                                .collect(Collectors.toList());
                     }
                 }, typeResolver);
         return new ErminTuple(codeResolver, typeResolver, entities);
     }
 
     public ErminEntity toErminEntity(EntityDef entityDef, TypeResolver typeResolver,
-            Collection<ErminName> entityNames) {
-        Map<Boolean, List<ErminName>> entityKeysAndOthers = entityDef.listident_.stream()
-                .map(ident -> ErminName.fromSnake(ident)).collect(Collectors
-                        .partitioningBy(entityName -> entityNames.contains(entityName)));
+            TypeResolver identifierResolver, Collection<ErminName> entityNames) {
+        ErminName entityName = ErminName.fromSnake(entityDef.ident_);
 
-        List<ErminName> entityKeys = entityKeysAndOthers.get(true);
-
-        Map<Boolean, List<ErminName>> typeKeyAndOthers = entityKeysAndOthers.get(false)
-                .stream().collect(Collectors.partitioningBy(entityName -> typeResolver
-                        .hasName(entityName.toString())));
-
-        List<ErminName> others = typeKeyAndOthers.get(false);
-        if (!others.isEmpty()) {
-            throw new RuntimeException(others.stream().map(ErminName::toString).collect(
-                    Collectors.joining(" ")));
+        final List<ErminKey> identifierKeys = new ArrayList<>();
+        final List<ErminName> entityKeys = new ArrayList<>();
+        for (String keyRef : entityDef.listident_) {
+            ErminName name = ErminName.fromSnake(keyRef);
+            identifierResolver.ifResolvedOrElse(keyRef, (type -> {
+                identifierKeys.add(new ErminKey(name, type));
+            }), () -> {
+                if (entityNames.contains(name)) {
+                    entityKeys.add(name);
+                } else {
+                    throw new RuntimeException();
+                }
+            });
         }
 
-        List<ErminName> typeKeys = typeKeyAndOthers.get(true);
-        Optional<ErminName> typeKey;
-        if (typeKeys.isEmpty()) {
-            typeKey = Optional.empty();
-        } else if (typeKeys.size() == 1) {
-            typeKey = Optional.of(typeKeys.get(0));
+        Optional<ErminKey> identifierKey;
+        if (identifierKeys.isEmpty()) {
+            identifierKey = Optional.empty();
+        } else if (identifierKeys.size() == 1) {
+            identifierKey = Optional.of(identifierKeys.get(0));
         } else {
             throw new RuntimeException();
         }
 
-        return new ErminEntity(ErminName.fromSnake(
-                entityDef.ident_), typeKey, entityKeys, entityDef.listattribute_.stream()
-                        .map(attribute -> attribute.accept(absynAttributeToErminAttribute,
-                                typeResolver)).collect(Collectors.toList()));
+        List<ErminAttribute> attributes = entityDef.listattribute_.stream().map(
+                attribute -> attribute.accept(absynAttributeToErminAttribute,
+                        typeResolver)).collect(Collectors.toList());
+
+        return new ErminEntity(entityName, identifierKey, entityKeys, attributes);
     }
 
     public Stream<EntityDef> filterEntityDef(final Stream<Def> defs) {
@@ -114,6 +130,11 @@ public class FrontEndProcessor {
 
                     @Override
                     public Stream<EntityDef> visit(CodeDef p, Void arg) {
+                        return Stream.<EntityDef> empty();
+                    }
+
+                    @Override
+                    public Stream<EntityDef> visit(IdentifierDef p, Void arg) {
                         return Stream.<EntityDef> empty();
                     }
 

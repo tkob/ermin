@@ -2,6 +2,7 @@ TopDefinitions. Top ::= [Def] ;
 
 TypeDef.          Def ::= "type" Ident "=" Type ;
 CodeDef.          Def ::= "code" Ident "=" [Code] ;
+IdentifierDef.    Def ::= "identifier" Ident "=" IdentifierType ;
 EntityDef.        Def ::= "entity" Ident "identified" "by" [Ident] [Attribute] ;
 KeyOnlyEntityDef. Def ::= "entity" Ident "identified" "by" [Ident] ;
 RelationshipDef.  Def ::= "relationship" Ident ":" RelationshipType ;
@@ -18,6 +19,10 @@ DecimalPrecisionScaleType. Type ::= "decimal" "(" Integer "," Integer ")" ;
 IntegerType.               Type ::= "integer" ;
 DateType.                  Type ::= "date" ;
 IdentType.                 Type ::= Ident ; -- identifier can refer to type or code
+
+CharIdType.    IdentifierType ::= "char" "(" Integer ")" ;
+VarCharIdType. IdentifierType ::= "varchar" "(" Integer ")" ;
+IntegerIdType. IdentifierType ::= "integer" ;
 
 ProductRelationship.        RelationshipType  ::= RelationshipType "*" RelationshipType1 ;
 EntityRelationship.         RelationshipType1 ::= Multiplicity Ident ;

@@ -12,6 +12,7 @@ import yokohama.lang.ermin.Absyn.Code;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
+import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.StringCode;
@@ -83,6 +84,11 @@ public class CodeResolverFactory {
                     @Override
                     public Stream<CodeDef> visit(CodeDef p, Void arg) {
                         return Stream.of(p);
+                    }
+
+                    @Override
+                    public Stream<CodeDef> visit(IdentifierDef p, Void arg) {
+                        return Stream.<CodeDef> empty();
                     }
 
                     @Override
