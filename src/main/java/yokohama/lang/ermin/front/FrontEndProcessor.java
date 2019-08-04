@@ -5,7 +5,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,10 +66,10 @@ public class FrontEndProcessor {
                 codeResolver);
         final TypeResolver identifierResolver = identifierResolverFactory.fromAbsyn(top);
 
-        final List<ErminEntity> entities = top.accept(
-                new Top.Visitor<List<ErminEntity>, TypeResolver>() {
+        final Map<String, ErminEntity> nameToEntity = top.accept(
+                new Top.Visitor<Map<String, ErminEntity>, TypeResolver>() {
                     @Override
-                    public List<ErminEntity> visit(final TopDefinitions p,
+                    public Map<String, ErminEntity> visit(final TopDefinitions p,
                             final TypeResolver typeResolver) {
                         List<EntityDef> entityDefs = filterEntityDef(p.listdef_.stream())
                                 .collect(Collectors.toList());
@@ -76,12 +78,27 @@ public class FrontEndProcessor {
                                 entityDef -> ErminName.fromSnake(entityDef.ident_))
                                 .collect(Collectors.toList());
 
-                        return entityDefs.stream().map(entityDef -> toErminEntity(
-                                entityDef, typeResolver, identifierResolver, entityNames))
-                                .collect(Collectors.toList());
+                        Map<String, ErminEntity> nameToEntity = new HashMap<>();
+                        entityDefs.forEach(entityDef -> {
+                            ErminEntity entity = toErminEntity(entityDef, typeResolver,
+                                    identifierResolver, entityNames);
+                            nameToEntity.put(entity.getName().toString(), entity);
+                        });
+                        return nameToEntity;
                     }
                 }, typeResolver);
-        return new ErminTuple(codeResolver, typeResolver, entities);
+
+        final Resolver<ErminEntity> entityResolver = new Resolver<ErminEntity>() {
+
+            @Override
+            public Optional<ErminEntity> resolve(String name) {
+                return Optional.ofNullable(nameToEntity.get(name));
+            }
+        };
+
+        final Collection<ErminEntity> entities = nameToEntity.values();
+
+        return new ErminTuple(codeResolver, typeResolver, entityResolver, entities);
     }
 
     public ErminEntity toErminEntity(EntityDef entityDef, TypeResolver typeResolver,

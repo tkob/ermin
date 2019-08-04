@@ -11,5 +11,7 @@ public class ErminTuple {
 
     private final TypeResolver typeResolver;
 
+    private final Resolver<ErminEntity> entityResolver;
+
     private final Collection<ErminEntity> entities;
 }
