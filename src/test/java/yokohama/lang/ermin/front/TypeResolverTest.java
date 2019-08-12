@@ -9,6 +9,7 @@ import org.junit.Test;
 import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
 import yokohama.lang.ermin.Absyn.Top;
+import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.front.CodeResolver;
 import yokohama.lang.ermin.front.CodeResolverFactory;
 import yokohama.lang.ermin.front.TypeResolver;
@@ -37,19 +38,19 @@ public class TypeResolverTest {
         TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top, codeResolver);
 
         Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)), typeResolver.resolve(
-                "rate"));
+                ErminName.fromSnake("rate")));
         Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)), typeResolver.resolve(
-                "exchange_rate"));
+                ErminName.fromSnake("exchange_rate")));
         Assert.assertEquals(Optional.of(new ErminVarCharType(40)), typeResolver.resolve(
-                "name"));
+                ErminName.fromSnake("name")));
         Assert.assertEquals(Optional.of(new ErminVarCharType(40)), typeResolver.resolve(
-                "product_name"));
+                ErminName.fromSnake("product_name")));
         Assert.assertEquals(Optional.of(new ErminIntegerType()), typeResolver.resolve(
-                "id"));
+                ErminName.fromSnake("id")));
         Assert.assertEquals(Optional.of(new ErminIntegerType()), typeResolver.resolve(
-                "person_id"));
+                ErminName.fromSnake("person_id")));
         Assert.assertEquals(Optional.of(new ErminIntegerType()), typeResolver.resolve(
-                "employee_id"));
+                ErminName.fromSnake("employee_id")));
     }
 
     @Test(expected = RuntimeException.class)

@@ -117,7 +117,7 @@ public class ReladomoTranslator {
                     final RelationshipType relationshipType = factory
                             .createRelationshipType();
                     relationshipType.setName(attribute.getName().toLowerCamel());
-                    relationshipType.setRelatedObject(stringCodeType.getName());
+                    relationshipType.setRelatedObject(stringCodeType.getName().toUpperCamel());
                     relationshipType.setCardinality(CardinalityType.MANY_TO_ONE);
                     relationshipType.setValue("this." + attribute.getName().toLowerCamel()
                             + " = " + stringCodeType.getName() + ".code");

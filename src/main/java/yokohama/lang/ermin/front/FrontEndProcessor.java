@@ -102,7 +102,7 @@ public class FrontEndProcessor {
         final List<ErminName> entityKeys = new ArrayList<>();
         for (String keyRef : entityDef.listident_) {
             ErminName name = ErminName.fromSnake(keyRef);
-            identifierResolver.ifResolvedOrElse(keyRef, (type -> {
+            identifierResolver.ifResolvedOrElse(name, (type -> {
                 identifierKeys.add(new ErminKey(name, type));
             }), () -> {
                 if (entityNames.contains(name)) {

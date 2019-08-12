@@ -29,6 +29,7 @@ import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.Type;
 import yokohama.lang.ermin.Absyn.TypeDef;
 import yokohama.lang.ermin.Absyn.VarCharType;
+import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.type.ErminBlobType;
 import yokohama.lang.ermin.type.ErminCharType;
 import yokohama.lang.ermin.type.ErminClobType;
@@ -55,7 +56,7 @@ public class TypeResolverFactory {
 
     public TypeResolver fromTypeDefs(Iterable<TypeDef> typeDefs,
             CodeResolver codeResolver) {
-        Set<String> typeNames = new HashSet<String>();
+        Set<ErminName> typeNames = new HashSet<>();
         codeResolver.getNames().forEach(name -> {
             if (typeNames.contains(name)) {
                 throw new RuntimeException("duplicate code definition: " + name);
@@ -64,7 +65,7 @@ public class TypeResolverFactory {
             }
         });
         typeDefs.forEach(typeDef -> {
-            String typeName = typeDef.ident_;
+            ErminName typeName = ErminName.fromSnake(typeDef.ident_);
             if (typeNames.contains(typeName)) {
                 throw new RuntimeException("duplicate type/code definition: " + typeName);
             } else {
@@ -72,86 +73,88 @@ public class TypeResolverFactory {
             }
         });
 
-        Map<String, ErminType> nameToType = new HashMap<>();
-        Map<String, String> nameToName = new HashMap<>();
+        Map<ErminName, ErminType> nameToType = new HashMap<>();
+        Map<ErminName, ErminName> nameToName = new HashMap<>();
 
         codeResolver.getNames().forEach(name -> {
             nameToType.put(name, new ErminStringCodeType(name));
         });
         typeDefs.forEach(typeDef -> {
+            ErminName typeName = ErminName.fromSnake(typeDef.ident_);
             typeDef.type_.accept(new Type.Visitor<Void, TypeDef>() {
 
                 @Override
                 public Void visit(CharType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminCharType(p.integer_));
+                    nameToType.put(typeName, new ErminCharType(p.integer_));
                     return null;
                 }
 
                 @Override
                 public Void visit(VarCharType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminVarCharType(p.integer_));
+                    nameToType.put(typeName, new ErminVarCharType(p.integer_));
                     return null;
                 }
 
                 @Override
                 public Void visit(ClobType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminClobType());
+                    nameToType.put(typeName, new ErminClobType());
                     return null;
                 }
 
                 @Override
                 public Void visit(BlobType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminBlobType());
+                    nameToType.put(typeName, new ErminBlobType());
                     return null;
                 }
 
                 @Override
                 public Void visit(DecimalType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminDecimalType());
+                    nameToType.put(typeName, new ErminDecimalType());
                     return null;
                 }
 
                 @Override
                 public Void visit(DecimalPrecisionType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminDecimalType(p.integer_));
+                    nameToType.put(typeName, new ErminDecimalType(p.integer_));
                     return null;
                 }
 
                 @Override
                 public Void visit(DecimalPrecisionScaleType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_,
+                    nameToType.put(typeName,
                             new ErminDecimalType(p.integer_1, p.integer_2));
                     return null;
                 }
 
                 @Override
                 public Void visit(IntegerType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminIntegerType());
+                    nameToType.put(typeName, new ErminIntegerType());
                     return null;
                 }
 
                 @Override
                 public Void visit(DateType p, TypeDef typeDef) {
-                    nameToType.put(typeDef.ident_, new ErminDateType());
+                    nameToType.put(typeName, new ErminDateType());
                     return null;
                 }
 
                 @Override
                 public Void visit(IdentType p, TypeDef typeDef) {
-                    if (codeResolver.hasName(p.ident_)) {
-                        nameToType.put(typeDef.ident_, new ErminStringCodeType(p.ident_));
+                    ErminName name = ErminName.fromSnake(p.ident_);
+                    if (codeResolver.hasName(name)) {
+                        nameToType.put(typeName, new ErminStringCodeType(name));
                     } else {
                         // cannot resolve to conrete type yet
-                        nameToName.put(typeDef.ident_, p.ident_);
+                        nameToName.put(typeName, name);
                     }
                     return null;
                 }
             }, typeDef);
         });
 
-        for (final String fromName : nameToName.keySet()) {
-            String toName = nameToName.get(fromName);
-            final Set<String> seen = new HashSet<String>();
+        for (final ErminName fromName : nameToName.keySet()) {
+            ErminName toName = nameToName.get(fromName);
+            final Set<ErminName> seen = new HashSet<>();
             seen.add(fromName);
             while (true) {
                 if (nameToType.containsKey(toName)) {
@@ -175,7 +178,7 @@ public class TypeResolverFactory {
         return new TypeResolver() {
 
             @Override
-            public Optional<ErminType> resolve(String name) {
+            public Optional<ErminType> resolve(ErminName name) {
                 return Optional.ofNullable(nameToType.get(name));
 
             }

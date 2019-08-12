@@ -19,6 +19,7 @@ import yokohama.lang.ermin.Absyn.StringCode;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
+import yokohama.lang.ermin.attribute.ErminName;
 
 public class CodeResolverFactory {
 
@@ -44,10 +45,10 @@ public class CodeResolverFactory {
             }
         });
 
-        Map<String, Iterable<String>> nameToValues = new HashMap<>();
+        Map<ErminName, Iterable<String>> nameToValues = new HashMap<>();
         codeDefs.forEach(codeDef -> {
-            nameToValues.put(codeDef.ident_, codeDef.listcode_.stream().map(code -> code
-                    .accept(new Code.Visitor<String, Void>() {
+            nameToValues.put(ErminName.fromSnake(codeDef.ident_), codeDef.listcode_
+                    .stream().map(code -> code.accept(new Code.Visitor<String, Void>() {
 
                         @Override
                         public String visit(StringCode p, Void arg) {
@@ -60,12 +61,12 @@ public class CodeResolverFactory {
         return new CodeResolver() {
 
             @Override
-            public Optional<Iterable<String>> resolve(String name) {
+            public Optional<Iterable<String>> resolve(ErminName name) {
                 return Optional.ofNullable(nameToValues.get(name));
             }
 
             @Override
-            public Iterable<String> getNames() {
+            public Iterable<ErminName> getNames() {
                 return nameToValues.keySet();
             }
         };

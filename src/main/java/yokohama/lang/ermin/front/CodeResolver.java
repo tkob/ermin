@@ -1,5 +1,7 @@
 package yokohama.lang.ermin.front;
 
-public interface CodeResolver extends Resolver<String, Iterable<String>> {
-    Iterable<String> getNames();
+import yokohama.lang.ermin.attribute.ErminName;
+
+public interface CodeResolver extends Resolver<ErminName, Iterable<String>> {
+    Iterable<ErminName> getNames();
 }

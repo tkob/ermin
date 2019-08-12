@@ -1,6 +1,7 @@
 package yokohama.lang.ermin.front;
 
 import yokohama.lang.ermin.Absyn.Type;
+import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.type.ErminBlobType;
 import yokohama.lang.ermin.type.ErminCharType;
 import yokohama.lang.ermin.type.ErminClobType;
@@ -69,7 +70,7 @@ public class AbsynTypeToErminType implements Type.Visitor<ErminType, TypeResolve
     @Override
     public ErminType visit(yokohama.lang.ermin.Absyn.IdentType p,
             TypeResolver typeResolver) {
-        return typeResolver.resolveOrThrow(p.ident_);
+        return typeResolver.resolveOrThrow(ErminName.fromSnake(p.ident_));
     }
 
 }

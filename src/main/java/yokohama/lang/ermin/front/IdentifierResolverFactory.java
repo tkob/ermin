@@ -22,6 +22,7 @@ import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
 import yokohama.lang.ermin.Absyn.VarCharIdType;
+import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.type.ErminCharType;
 import yokohama.lang.ermin.type.ErminIntegerType;
 import yokohama.lang.ermin.type.ErminType;
@@ -55,7 +56,7 @@ public class IdentifierResolverFactory {
             }
         });
 
-        Map<String, ErminType> nameToType = new HashMap<>();
+        Map<ErminName, ErminType> nameToType = new HashMap<>();
 
         identifierDefs.forEach(identifierDef -> {
             identifierDef.identifiertype_.accept(
@@ -63,19 +64,19 @@ public class IdentifierResolverFactory {
 
                         @Override
                         public Void visit(CharIdType p, IdentifierDef arg) {
-                            nameToType.put(arg.ident_, new ErminCharType(p.integer_));
+                            nameToType.put(ErminName.fromSnake(arg.ident_), new ErminCharType(p.integer_));
                             return null;
                         }
 
                         @Override
                         public Void visit(VarCharIdType p, IdentifierDef arg) {
-                            nameToType.put(arg.ident_, new ErminVarCharType(p.integer_));
+                            nameToType.put(ErminName.fromSnake(arg.ident_), new ErminVarCharType(p.integer_));
                             return null;
                         }
 
                         @Override
                         public Void visit(IntegerIdType p, IdentifierDef arg) {
-                            nameToType.put(arg.ident_, new ErminIntegerType());
+                            nameToType.put(ErminName.fromSnake(arg.ident_), new ErminIntegerType());
                             return null;
                         }
                     }, identifierDef);
@@ -84,7 +85,7 @@ public class IdentifierResolverFactory {
         return new TypeResolver() {
 
             @Override
-            public Optional<ErminType> resolve(String name) {
+            public Optional<ErminType> resolve(ErminName name) {
                 return Optional.ofNullable(nameToType.get(name));
 
             }
