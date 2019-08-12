@@ -20,6 +20,8 @@ ext.jaxbVersion = '2.4.0-b180830.0438'
 dependencies {
     compile "de.jflex:jflex:$jflexVersion"
     compile "org.glassfish.jaxb:jaxb-runtime:$jaxbVersion"
+    compile "org.apache.commons:commons-lang3:3.9"
+
     testCompile 'junit:junit:4.11'
 
     antTasks "de.jflex:jflex:$jflexVersion"
