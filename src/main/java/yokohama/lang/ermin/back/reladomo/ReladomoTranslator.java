@@ -48,8 +48,8 @@ public class ReladomoTranslator {
         });
         entity.getTypeKey().ifPresent(typeKey -> {
             final AttributeType attributeType = factory.createAttributeType();
-            attributeType.setName(typeKey.getName().toString());
-            attributeType.setColumnName(typeKey.getName().toString());
+            attributeType.setName(typeKey.getName().toLowerCamel());
+            attributeType.setColumnName(typeKey.getName().toSnake());
             attributeType.setPrimaryKey(true);
             typeKey.getType().accept(new ReladomoJavaTypeSetter(attributeType));
             attributes.add(attributeType);
@@ -57,13 +57,13 @@ public class ReladomoTranslator {
     }
 
     MithraObjectType toMithraObject(final ErminEntity entity,
-            final Resolver<ErminEntity> entityResolver,
+            final Resolver<ErminName, ErminEntity> entityResolver,
             final Iterable<ErminEntity> entities, final TypeResolver typeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
         mithraObject.setPackageName("yokohama.lang.test");
-        mithraObject.setClassName(entity.getName().toString());
-        mithraObject.setDefaultTable(entity.getName().toString());
+        mithraObject.setClassName(entity.getName().toUpperCamel());
+        mithraObject.setDefaultTable(entity.getName().toSnake());
         final List<AttributeType> attributes = mithraObject.getAttribute();
         final List<RelationshipType> relationships = mithraObject.getRelationship();
 
@@ -116,10 +116,10 @@ public class ReladomoTranslator {
                 public Void visitStringCodeType(ErminStringCodeType stringCodeType) {
                     final RelationshipType relationshipType = factory
                             .createRelationshipType();
-                    relationshipType.setName(attribute.getName().toString());
+                    relationshipType.setName(attribute.getName().toLowerCamel());
                     relationshipType.setRelatedObject(stringCodeType.getName());
                     relationshipType.setCardinality(CardinalityType.MANY_TO_ONE);
-                    relationshipType.setValue("this." + attribute.getName().toString()
+                    relationshipType.setValue("this." + attribute.getName().toLowerCamel()
                             + " = " + stringCodeType.getName() + ".code");
                     relationships.add(relationshipType);
                     return null;
@@ -134,8 +134,8 @@ public class ReladomoTranslator {
     AttributeType toAttribute(ErminAttribute attribute, final TypeResolver typeResolver) {
         final AttributeType attributeType = factory.createAttributeType();
 
-        attributeType.setName(attribute.getName().toString());
-        attributeType.setColumnName(attribute.getName().toString());
+        attributeType.setName(attribute.getName().toLowerCamel());
+        attributeType.setColumnName(attribute.getName().toSnake());
         switch (attribute.getAttributeSpecifier()) {
             case MANDATORY:
             case UNIQUE:
