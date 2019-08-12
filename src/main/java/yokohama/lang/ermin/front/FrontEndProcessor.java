@@ -14,27 +14,20 @@ import java.util.stream.Stream;
 
 import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
-import yokohama.lang.ermin.Absyn.CharIdType;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
-import yokohama.lang.ermin.Absyn.IdentifierType;
-import yokohama.lang.ermin.Absyn.IntegerIdType;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.ListAttribute;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
-import yokohama.lang.ermin.Absyn.VarCharIdType;
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.attribute.ErminKey;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
-import yokohama.lang.ermin.type.ErminCharType;
-import yokohama.lang.ermin.type.ErminIntegerType;
-import yokohama.lang.ermin.type.ErminVarCharType;
 
 public class FrontEndProcessor {
 
