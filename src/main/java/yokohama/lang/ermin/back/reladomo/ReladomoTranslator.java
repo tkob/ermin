@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import yokohama.lang.ermin.attribute.ErminAttribute;
+import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
 import yokohama.lang.ermin.front.ErminTuple;
 import yokohama.lang.ermin.front.FrontEndProcessor;
@@ -37,11 +38,11 @@ public class ReladomoTranslator {
     }
 
     void accumulatePrimaryKeys(final ErminEntity entity,
-            final Resolver<ErminEntity> entityResolver,
+            final Resolver<ErminName, ErminEntity> entityResolver,
             final List<AttributeType> attributes) {
 
         entity.getEntityKeys().forEach(entityKey -> {
-            entityResolver.resolve(entityKey.toString()).ifPresent(keyEntity -> {
+            entityResolver.resolve(entityKey).ifPresent(keyEntity -> {
                 accumulatePrimaryKeys(keyEntity, entityResolver, attributes);
             });
         });

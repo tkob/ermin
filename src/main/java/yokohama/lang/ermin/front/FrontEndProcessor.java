@@ -66,10 +66,10 @@ public class FrontEndProcessor {
                 codeResolver);
         final TypeResolver identifierResolver = identifierResolverFactory.fromAbsyn(top);
 
-        final Map<String, ErminEntity> nameToEntity = top.accept(
-                new Top.Visitor<Map<String, ErminEntity>, TypeResolver>() {
+        final Map<ErminName, ErminEntity> nameToEntity = top.accept(
+                new Top.Visitor<Map<ErminName, ErminEntity>, TypeResolver>() {
                     @Override
-                    public Map<String, ErminEntity> visit(final TopDefinitions p,
+                    public Map<ErminName, ErminEntity> visit(final TopDefinitions p,
                             final TypeResolver typeResolver) {
                         List<EntityDef> entityDefs = filterEntityDef(p.listdef_.stream())
                                 .collect(Collectors.toList());
@@ -78,20 +78,20 @@ public class FrontEndProcessor {
                                 entityDef -> ErminName.fromSnake(entityDef.ident_))
                                 .collect(Collectors.toList());
 
-                        Map<String, ErminEntity> nameToEntity = new HashMap<>();
+                        Map<ErminName, ErminEntity> nameToEntity = new HashMap<>();
                         entityDefs.forEach(entityDef -> {
                             ErminEntity entity = toErminEntity(entityDef, typeResolver,
                                     identifierResolver, entityNames);
-                            nameToEntity.put(entity.getName().toString(), entity);
+                            nameToEntity.put(entity.getName(), entity);
                         });
                         return nameToEntity;
                     }
                 }, typeResolver);
 
-        final Resolver<ErminEntity> entityResolver = new Resolver<ErminEntity>() {
+        final Resolver<ErminName, ErminEntity> entityResolver = new Resolver<ErminName, ErminEntity>() {
 
             @Override
-            public Optional<ErminEntity> resolve(String name) {
+            public Optional<ErminEntity> resolve(ErminName name) {
                 return Optional.ofNullable(nameToEntity.get(name));
             }
         };
