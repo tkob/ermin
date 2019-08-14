@@ -1,11 +1,15 @@
 package yokohama.lang.ermin.back.reladomo;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
+import yokohama.lang.ermin.front.CodeResolver;
 import yokohama.lang.ermin.front.ErminTuple;
 import yokohama.lang.ermin.front.FrontEndProcessor;
 import yokohama.lang.ermin.front.Resolver;
@@ -32,9 +36,17 @@ public class ReladomoTranslator {
     ObjectFactory factory = new ObjectFactory();
 
     public Iterable<MithraObjectType> toMithraObjects(final ErminTuple erminTuple) {
-        return erminTuple.getEntities().stream().map(entityDef -> toMithraObject(
-                entityDef, erminTuple.getEntityResolver(), erminTuple.getEntities(),
-                erminTuple.getTypeResolver())).collect(Collectors.toList());
+        Stream<MithraObjectType> entities = erminTuple.getEntities().stream().map(
+                entityDef -> entityToMithraObject(entityDef, erminTuple
+                        .getEntityResolver(), erminTuple.getEntities(), erminTuple
+                                .getTypeResolver()));
+
+        CodeResolver codeResolver = erminTuple.getCodeResolver();
+        Stream<MithraObjectType> codes = StreamSupport.stream(codeResolver.getNames()
+                .spliterator(), false).map(name -> codeToMithraObject(name,
+                        codeResolver));
+
+        return Stream.concat(entities, codes).collect(Collectors.toList());
     }
 
     void accumulatePrimaryKeys(final ErminEntity entity,
@@ -56,7 +68,7 @@ public class ReladomoTranslator {
         });
     }
 
-    MithraObjectType toMithraObject(final ErminEntity entity,
+    MithraObjectType entityToMithraObject(final ErminEntity entity,
             final Resolver<ErminName, ErminEntity> entityResolver,
             final Iterable<ErminEntity> entities, final TypeResolver typeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
@@ -120,7 +132,8 @@ public class ReladomoTranslator {
                     relationshipType.setRelatedObject(stringCodeType.getName().toUpperCamel());
                     relationshipType.setCardinality(CardinalityType.MANY_TO_ONE);
                     relationshipType.setValue("this." + attribute.getName().toLowerCamel()
-                            + " = " + stringCodeType.getName() + ".code");
+                            + " = " + stringCodeType.getName().toUpperCamel() + "."
+                            + stringCodeType.getName().toLowerCamel());
                     relationships.add(relationshipType);
                     return null;
                 }
@@ -148,4 +161,30 @@ public class ReladomoTranslator {
         return attributeType;
     }
 
+    MithraObjectType codeToMithraObject(ErminName name, CodeResolver codeResolver) {
+        final MithraObjectType mithraObject = factory.createMithraObjectType();
+
+        mithraObject.setPackageName("yokohama.lang.test");
+        mithraObject.setClassName(name.toUpperCamel());
+        mithraObject.setDefaultTable(name.toSnake());
+
+        final List<AttributeType> attributes = mithraObject.getAttribute();
+
+        final AttributeType attributeType = factory.createAttributeType();
+        attributeType.setName(name.toLowerCamel());
+        attributeType.setColumnName(name.toSnake());
+        attributeType.setJavaType("String");
+        attributeType.setPrimaryKey(true);
+        attributeType.setMaxLength(StreamSupport.stream(codeResolver.resolveOrThrow(name)
+                .spliterator(), false).max(new Comparator<String>() {
+                    @Override
+                    public int compare(String code1, String code2) {
+                        return Integer.compare(code1.length(), code2.length());
+                    }
+                }).map(code -> code.length()).orElse(0));
+
+        attributes.add(attributeType);
+
+        return mithraObject;
+    }
 }
