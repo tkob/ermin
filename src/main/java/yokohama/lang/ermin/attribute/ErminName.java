@@ -36,7 +36,7 @@ public class ErminName {
     }
 
     public static ErminName fromSnake(String snake) {
-        return new ErminName(Arrays.asList(snake.split("_+")));
+        return new ErminName(Arrays.asList(snake.split("_", -1)));
     }
 
 }
