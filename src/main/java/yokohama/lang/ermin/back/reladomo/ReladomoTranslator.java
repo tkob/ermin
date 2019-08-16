@@ -1,6 +1,5 @@
 package yokohama.lang.ermin.back.reladomo;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -175,13 +174,7 @@ public class ReladomoTranslator {
         attributeType.setColumnName(name.toSnake());
         attributeType.setJavaType("String");
         attributeType.setPrimaryKey(true);
-        attributeType.setMaxLength(StreamSupport.stream(codeResolver.resolveOrThrow(name)
-                .spliterator(), false).max(new Comparator<String>() {
-                    @Override
-                    public int compare(String code1, String code2) {
-                        return Integer.compare(code1.length(), code2.length());
-                    }
-                }).map(code -> code.length()).orElse(0));
+        attributeType.setMaxLength(codeResolver.maxLength(name));
 
         attributes.add(attributeType);
 

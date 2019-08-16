@@ -1,5 +1,6 @@
 package yokohama.lang.ermin.front;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import yokohama.lang.ermin.Absyn.Code;
 import yokohama.lang.ermin.Absyn.CodeDef;
@@ -68,6 +70,18 @@ public class CodeResolverFactory {
             @Override
             public Iterable<ErminName> getNames() {
                 return nameToValues.keySet();
+            }
+
+            @Override
+            public int maxLength(ErminName name) {
+                Stream<String> codes = StreamSupport.stream(this.resolveOrThrow(name)
+                        .spliterator(), false);
+                return codes.max(new Comparator<String>() {
+                    @Override
+                    public int compare(String code1, String code2) {
+                        return Integer.compare(code1.length(), code2.length());
+                    }
+                }).map(code -> code.length()).orElse(0);
             }
         };
 
