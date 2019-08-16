@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 
 import lombok.RequiredArgsConstructor;
+import yokohama.lang.ermin.front.CodeResolver;
 import yokohama.lang.ermin.type.ErminBlobType;
 import yokohama.lang.ermin.type.ErminCharType;
 import yokohama.lang.ermin.type.ErminClobType;
@@ -19,6 +20,8 @@ import yokohama.lang.reladomo.AttributePureType;
 public class ReladomoJavaTypeSetter implements ErminTypeVisitor<Void> {
 
     private final AttributePureType attributePure;
+
+    private final CodeResolver codeResolver;
 
     // valid types in Reladomo are
     // [boolean, double, byte, char, short, float, int, long]
@@ -74,8 +77,9 @@ public class ReladomoJavaTypeSetter implements ErminTypeVisitor<Void> {
     }
 
     @Override
-    public Void visitStringCodeType(ErminStringCodeType dateType) {
+    public Void visitStringCodeType(ErminStringCodeType stringCodeType) {
         attributePure.setJavaType(String.class.getSimpleName());
+        attributePure.setMaxLength(codeResolver.maxLength(stringCodeType.getName()));
         return null;
     }
 

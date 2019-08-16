@@ -12,7 +12,6 @@ import yokohama.lang.ermin.front.CodeResolver;
 import yokohama.lang.ermin.front.ErminTuple;
 import yokohama.lang.ermin.front.FrontEndProcessor;
 import yokohama.lang.ermin.front.Resolver;
-import yokohama.lang.ermin.front.TypeResolver;
 import yokohama.lang.ermin.type.ErminBlobType;
 import yokohama.lang.ermin.type.ErminCharType;
 import yokohama.lang.ermin.type.ErminClobType;
@@ -38,7 +37,7 @@ public class ReladomoTranslator {
         Stream<MithraObjectType> entities = erminTuple.getEntities().stream().map(
                 entityDef -> entityToMithraObject(entityDef, erminTuple
                         .getEntityResolver(), erminTuple.getEntities(), erminTuple
-                                .getTypeResolver()));
+                                .getCodeResolver()));
 
         CodeResolver codeResolver = erminTuple.getCodeResolver();
         Stream<MithraObjectType> codes = StreamSupport.stream(codeResolver.getNames()
@@ -50,11 +49,12 @@ public class ReladomoTranslator {
 
     void accumulatePrimaryKeys(final ErminEntity entity,
             final Resolver<ErminName, ErminEntity> entityResolver,
-            final List<AttributeType> attributes) {
+            final CodeResolver codeResolver, final List<AttributeType> attributes) {
 
         entity.getEntityKeys().forEach(entityKey -> {
             entityResolver.resolve(entityKey).ifPresent(keyEntity -> {
-                accumulatePrimaryKeys(keyEntity, entityResolver, attributes);
+                accumulatePrimaryKeys(keyEntity, entityResolver, codeResolver,
+                        attributes);
             });
         });
         entity.getTypeKey().ifPresent(typeKey -> {
@@ -62,14 +62,15 @@ public class ReladomoTranslator {
             attributeType.setName(typeKey.getName().toLowerCamel());
             attributeType.setColumnName(typeKey.getName().toSnake());
             attributeType.setPrimaryKey(true);
-            typeKey.getType().accept(new ReladomoJavaTypeSetter(attributeType));
+            typeKey.getType().accept(
+                    new ReladomoJavaTypeSetter(attributeType, codeResolver));
             attributes.add(attributeType);
         });
     }
 
     MithraObjectType entityToMithraObject(final ErminEntity entity,
             final Resolver<ErminName, ErminEntity> entityResolver,
-            final Iterable<ErminEntity> entities, final TypeResolver typeResolver) {
+            final Iterable<ErminEntity> entities, final CodeResolver codeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
         mithraObject.setPackageName("yokohama.lang.test");
@@ -78,11 +79,11 @@ public class ReladomoTranslator {
         final List<AttributeType> attributes = mithraObject.getAttribute();
         final List<RelationshipType> relationships = mithraObject.getRelationship();
 
-        accumulatePrimaryKeys(entity, entityResolver, attributes);
+        accumulatePrimaryKeys(entity, entityResolver, codeResolver, attributes);
 
         // add non-key attributes
         attributes.addAll(entity.getAttributes().stream().map(attribute -> toAttribute(
-                attribute, typeResolver)).collect(Collectors.toList()));
+                attribute, codeResolver)).collect(Collectors.toList()));
 
         // add code relationships
         entity.getAttributes().forEach(attribute -> {
@@ -143,7 +144,7 @@ public class ReladomoTranslator {
         return mithraObject;
     }
 
-    AttributeType toAttribute(ErminAttribute attribute, final TypeResolver typeResolver) {
+    AttributeType toAttribute(ErminAttribute attribute, final CodeResolver codeResolver) {
         final AttributeType attributeType = factory.createAttributeType();
 
         attributeType.setName(attribute.getName().toLowerCamel());
@@ -155,7 +156,8 @@ public class ReladomoTranslator {
             case OPTIONAL:
                 attributeType.setNullable(true);
         }
-        attribute.getType().accept(new ReladomoJavaTypeSetter(attributeType));
+        attribute.getType().accept(
+                new ReladomoJavaTypeSetter(attributeType, codeResolver));
 
         return attributeType;
     }
