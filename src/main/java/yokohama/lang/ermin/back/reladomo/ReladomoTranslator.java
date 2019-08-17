@@ -91,6 +91,7 @@ public class ReladomoTranslator {
             case OPTIONAL:
                 attributeType.setNullable(true);
         }
+        attributeType.setPrimaryKey(false);
         attribute.getType().accept(
                 new ReladomoJavaTypeSetter(attributeType, codeResolver));
 
