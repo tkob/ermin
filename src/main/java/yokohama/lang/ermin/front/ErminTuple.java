@@ -5,6 +5,7 @@ import java.util.Collection;
 import lombok.Value;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
+import yokohama.lang.ermin.relationship.ErminRelationship;
 
 @Value
 public class ErminTuple {
@@ -15,4 +16,6 @@ public class ErminTuple {
     private final Resolver<ErminName, ErminEntity> entityResolver;
 
     private final Collection<ErminEntity> entities;
+
+    private final Collection<ErminRelationship> relationships;
 }

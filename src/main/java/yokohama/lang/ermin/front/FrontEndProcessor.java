@@ -16,18 +16,36 @@ import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
+import yokohama.lang.ermin.Absyn.DefaultEntityRelationship;
 import yokohama.lang.ermin.Absyn.EntityDef;
+import yokohama.lang.ermin.Absyn.EntityRelationship;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.ListAttribute;
+import yokohama.lang.ermin.Absyn.Multiplicity;
+import yokohama.lang.ermin.Absyn.NumericOneMultiplicity;
+import yokohama.lang.ermin.Absyn.NumericOneOreMoreMultiplicity;
+import yokohama.lang.ermin.Absyn.NumericZeroOrMoreMultiplicity;
+import yokohama.lang.ermin.Absyn.NumericZeroOrOneMultiplicity;
+import yokohama.lang.ermin.Absyn.OneMultiplicity;
+import yokohama.lang.ermin.Absyn.OneOreMoreMultiplicity;
+import yokohama.lang.ermin.Absyn.ProductRelationship;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
+import yokohama.lang.ermin.Absyn.RelationshipType;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
+import yokohama.lang.ermin.Absyn.ZeroOrMoreMultiplicity;
+import yokohama.lang.ermin.Absyn.ZeroOrOneMultiplicity;
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.attribute.ErminKey;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
+import yokohama.lang.ermin.relationship.ErminAtomicRelationshipExp;
+import yokohama.lang.ermin.relationship.ErminMultiplicity;
+import yokohama.lang.ermin.relationship.ErminProductRelationshipExp;
+import yokohama.lang.ermin.relationship.ErminRelationship;
+import yokohama.lang.ermin.relationship.ErminRelationshipExp;
 
 public class FrontEndProcessor {
 
@@ -91,7 +109,19 @@ public class FrontEndProcessor {
 
         final Collection<ErminEntity> entities = nameToEntity.values();
 
-        return new ErminTuple(codeResolver, typeResolver, entityResolver, entities);
+        final Collection<ErminRelationship> relationships = top.accept(
+                new Top.Visitor<Collection<ErminRelationship>, TypeResolver>() {
+
+                    @Override
+                    public Collection<ErminRelationship> visit(final TopDefinitions p,
+                            final TypeResolver arg) {
+                        return filterRelationshipDef(p.listdef_.stream()).map(
+                                relationshipDef -> toErminRelationship(relationshipDef))
+                                .collect(Collectors.toList());
+                    }
+                }, typeResolver);
+
+        return new ErminTuple(codeResolver, typeResolver, entityResolver, entities, relationships);
     }
 
     public ErminEntity toErminEntity(EntityDef entityDef, TypeResolver typeResolver,
@@ -129,6 +159,89 @@ public class FrontEndProcessor {
         return new ErminEntity(entityName, identifierKey, entityKeys, attributes);
     }
 
+    public ErminRelationship toErminRelationship(final RelationshipDef relationshipDef) {
+        ErminName name = ErminName.fromSnake(relationshipDef.ident_);
+        ErminRelationshipExp exp = toErminRelationshipExp(
+                relationshipDef.relationshiptype_);
+        return new ErminRelationship(name, exp);
+    }
+
+    public ErminRelationshipExp toErminRelationshipExp(
+            final RelationshipType relationshiptype_) {
+        return relationshiptype_.accept(
+                new RelationshipType.Visitor<ErminRelationshipExp, Void>() {
+
+                    @Override
+                    public ErminRelationshipExp visit(ProductRelationship p, Void arg) {
+                        return new ErminProductRelationshipExp(toErminRelationshipExp(
+                                p.relationshiptype_1), toErminRelationshipExp(
+                                        p.relationshiptype_2));
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(EntityRelationship p, Void arg) {
+                        return new ErminAtomicRelationshipExp(p.multiplicity_.accept(
+                                new Multiplicity.Visitor<ErminMultiplicity, Void>() {
+
+                                    @Override
+                                    public ErminMultiplicity visit(OneMultiplicity p,
+                                            Void arg) {
+                                        return ErminMultiplicity.ONE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            ZeroOrOneMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ZERO_OR_ONE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            ZeroOrMoreMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ZERO_OR_MORE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            OneOreMoreMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ONE_OR_MORE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            NumericOneMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ONE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            NumericZeroOrOneMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ZERO_OR_ONE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            NumericZeroOrMoreMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ZERO_OR_MORE;
+                                    }
+
+                                    @Override
+                                    public ErminMultiplicity visit(
+                                            NumericOneOreMoreMultiplicity p, Void arg) {
+                                        return ErminMultiplicity.ONE_OR_MORE;
+                                    }
+                                }, null), ErminName.fromSnake(p.ident_));
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(DefaultEntityRelationship p,
+                            Void arg) {
+                        return new ErminAtomicRelationshipExp(ErminMultiplicity.ZERO_OR_MORE, ErminName
+                                .fromSnake(p.ident_));
+                    }
+                }, null);
+    }
+
     public Stream<EntityDef> filterEntityDef(final Stream<Def> defs) {
         return defs.flatMap((Def def) -> def.accept(
                 new Def.Visitor<Stream<EntityDef>, Void>() {
@@ -162,6 +275,42 @@ public class FrontEndProcessor {
                     @Override
                     public Stream<EntityDef> visit(RelationshipDef p, Void arg) {
                         return Stream.<EntityDef> empty();
+                    }
+                }, null));
+    }
+
+    public Stream<RelationshipDef> filterRelationshipDef(final Stream<Def> defs) {
+        return defs.flatMap((Def def) -> def.accept(
+                new Def.Visitor<Stream<RelationshipDef>, Void>() {
+
+                    @Override
+                    public Stream<RelationshipDef> visit(TypeDef p, Void arg) {
+                        return Stream.<RelationshipDef> empty();
+                    }
+
+                    @Override
+                    public Stream<RelationshipDef> visit(CodeDef p, Void arg) {
+                        return Stream.<RelationshipDef> empty();
+                    }
+
+                    @Override
+                    public Stream<RelationshipDef> visit(IdentifierDef p, Void arg) {
+                        return Stream.<RelationshipDef> empty();
+                    }
+
+                    @Override
+                    public Stream<RelationshipDef> visit(EntityDef p, Void arg) {
+                        return Stream.<RelationshipDef> empty();
+                    }
+
+                    @Override
+                    public Stream<RelationshipDef> visit(KeyOnlyEntityDef p, Void arg) {
+                        return Stream.<RelationshipDef> empty();
+                    }
+
+                    @Override
+                    public Stream<RelationshipDef> visit(RelationshipDef p, Void arg) {
+                        return Stream.of(p);
                     }
                 }, null));
     }
