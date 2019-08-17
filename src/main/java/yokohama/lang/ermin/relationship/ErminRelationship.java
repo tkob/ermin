@@ -8,4 +8,8 @@ public class ErminRelationship {
     private final ErminName name;
 
     private final ErminRelationshipExp exp;
+
+    public int getArity() {
+        return exp.getArity();
+    }
 }

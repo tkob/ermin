@@ -13,4 +13,9 @@ public class ErminProductRelationshipExp implements ErminRelationshipExp {
     public <R> R accept(ErminRelationshipExpVisitor<R> visitor) {
         return visitor.visitProductRelationshipExp(this);
     }
+
+    @Override
+    public int getArity() {
+        return left.getArity() + right.getArity();
+    }
 }

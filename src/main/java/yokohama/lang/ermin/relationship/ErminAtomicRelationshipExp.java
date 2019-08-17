@@ -14,4 +14,9 @@ public class ErminAtomicRelationshipExp implements ErminRelationshipExp {
     public <R> R accept(ErminRelationshipExpVisitor<R> visitor) {
         return visitor.visitAtomicRelationshipExp(this);
     }
+
+    @Override
+    public int getArity() {
+        return 1;
+    }
 }
