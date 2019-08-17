@@ -1,9 +1,9 @@
 package yokohama.lang.ermin.back.reladomo;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.attribute.ErminName;
@@ -23,17 +23,20 @@ public class ReladomoTranslator {
     ObjectFactory factory = new ObjectFactory();
 
     public Iterable<MithraObjectType> toMithraObjects(final ErminTuple erminTuple) {
-        Stream<MithraObjectType> entities = erminTuple.getEntities().stream().map(
-                entityDef -> entityToMithraObject(entityDef, erminTuple
-                        .getEntityResolver(), erminTuple.getEntities(), erminTuple
-                                .getCodeResolver()));
+        final Collection<MithraObjectType> mithraObjects = new ArrayList<MithraObjectType>();
 
-        CodeResolver codeResolver = erminTuple.getCodeResolver();
-        Stream<MithraObjectType> codes = StreamSupport.stream(codeResolver.getNames()
-                .spliterator(), false).map(name -> codeToMithraObject(name,
-                        codeResolver));
+        // Entities to MithraObjects.
+        erminTuple.getEntities().forEach(entity -> {
+            mithraObjects.add(entityToMithraObject(entity, erminTuple.getEntityResolver(),
+                    erminTuple.getCodeResolver()));
+        });
 
-        return Stream.concat(entities, codes).collect(Collectors.toList());
+        // Codes to MithraObjects
+        erminTuple.getCodeResolver().getNames().forEach(name -> {
+            mithraObjects.add(codeToMithraObject(name, erminTuple.getCodeResolver()));
+        });
+
+        return mithraObjects;
     }
 
     void accumulatePrimaryKeys(final ErminEntity entity,
@@ -59,7 +62,7 @@ public class ReladomoTranslator {
 
     MithraObjectType entityToMithraObject(final ErminEntity entity,
             final Resolver<ErminName, ErminEntity> entityResolver,
-            final Iterable<ErminEntity> entities, final CodeResolver codeResolver) {
+            final CodeResolver codeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
         mithraObject.setPackageName("yokohama.lang.test");
