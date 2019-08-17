@@ -2,7 +2,9 @@ package yokohama.lang.ermin.back.reladomo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import yokohama.lang.ermin.attribute.ErminAttribute;
@@ -23,20 +25,21 @@ public class ReladomoTranslator {
     ObjectFactory factory = new ObjectFactory();
 
     public Iterable<MithraObjectType> toMithraObjects(final ErminTuple erminTuple) {
-        final Collection<MithraObjectType> mithraObjects = new ArrayList<MithraObjectType>();
+        final Map<ErminName, MithraObjectType> mithraObjects = new HashMap<>();
 
         // Entities to MithraObjects.
         erminTuple.getEntities().forEach(entity -> {
-            mithraObjects.add(entityToMithraObject(entity, erminTuple.getEntityResolver(),
-                    erminTuple.getCodeResolver()));
+            mithraObjects.put(entity.getName(), entityToMithraObject(entity, erminTuple
+                    .getEntityResolver(), erminTuple.getCodeResolver()));
         });
 
         // Codes to MithraObjects
         erminTuple.getCodeResolver().getNames().forEach(name -> {
-            mithraObjects.add(codeToMithraObject(name, erminTuple.getCodeResolver()));
+            mithraObjects.put(name, codeToMithraObject(name, erminTuple
+                    .getCodeResolver()));
         });
 
-        return mithraObjects;
+        return mithraObjects.values();
     }
 
     void accumulatePrimaryKeys(final ErminEntity entity,
