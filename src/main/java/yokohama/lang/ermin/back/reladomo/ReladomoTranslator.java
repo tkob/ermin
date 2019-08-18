@@ -135,11 +135,21 @@ public class ReladomoTranslator {
         mithraObject.setDefaultTable(relationship.getName().toSnake());
 
         final List<AttributeType> attributes = mithraObject.getAttribute();
+        final List<RelationshipType> relationshipTypes = mithraObject.getRelationship();
         for (final ErminName name : exps) {
             List<AttributeType> primaryKeys = mithraObjects.get(name).getAttribute()
                     .stream().filter(AttributePureType::isPrimaryKey).collect(Collectors
                             .toList());
             attributes.addAll(primaryKeys);
+
+            RelationshipType relationshipType = factory.createRelationshipType();
+            relationshipType.setCardinality(CardinalityType.MANY_TO_ONE);
+            relationshipType.setName(name.toLowerCamel());
+            relationshipType.setRelatedObject(name.toUpperCamel());
+            relationshipType.setValue(primaryKeys.stream().map(attr -> "this." + attr
+                    .getName() + " = " + name.toUpperCamel() + "." + attr.getName())
+                    .collect(Collectors.joining(" and ")));
+            relationshipTypes.add(relationshipType);
         }
 
         mithraObjects.put(relationship.getName(), mithraObject);
