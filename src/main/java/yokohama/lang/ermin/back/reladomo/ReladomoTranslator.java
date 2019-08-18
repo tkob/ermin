@@ -29,6 +29,7 @@ import yokohama.lang.reladomo.AttributeType;
 import yokohama.lang.reladomo.CardinalityType;
 import yokohama.lang.reladomo.MithraObjectType;
 import yokohama.lang.reladomo.ObjectFactory;
+import yokohama.lang.reladomo.ObjectType;
 import yokohama.lang.reladomo.RelationshipType;
 
 public class ReladomoTranslator {
@@ -87,6 +88,7 @@ public class ReladomoTranslator {
             final CodeResolver codeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
+        mithraObject.setObjectType(ObjectType.TRANSACTIONAL);
         mithraObject.setPackageName("yokohama.lang.test");
         mithraObject.setClassName(entity.getName().toUpperCamel());
         mithraObject.setDefaultTable(entity.getName().toSnake());
@@ -127,6 +129,7 @@ public class ReladomoTranslator {
         final Iterable<ErminName> exps = flattenRelationshipExps(relationship.getExp());
 
         final MithraObjectType mithraObject = factory.createMithraObjectType();
+        mithraObject.setObjectType(ObjectType.TRANSACTIONAL);
         mithraObject.setPackageName("yokohama.lang.test");
         mithraObject.setClassName(relationship.getName().toUpperCamel());
         mithraObject.setDefaultTable(relationship.getName().toSnake());
@@ -210,6 +213,7 @@ public class ReladomoTranslator {
     MithraObjectType codeToMithraObject(ErminName name, CodeResolver codeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
+        mithraObject.setObjectType(ObjectType.READ_ONLY);
         mithraObject.setPackageName("yokohama.lang.test");
         mithraObject.setClassName(name.toUpperCamel());
         mithraObject.setDefaultTable(name.toSnake());
