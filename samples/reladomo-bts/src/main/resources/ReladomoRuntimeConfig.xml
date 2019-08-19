@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MithraRuntime>
+	<ConnectionManager
+		className="sample.reladomo_bts.SpringConnectionManager">
+
+		<MithraObjectConfiguration
+			className="yokohama.lang.test.Account" cacheType="partial" />
+
+		<MithraObjectConfiguration
+			className="yokohama.lang.test.Bug" cacheType="partial" />
+
+		<MithraObjectConfiguration
+			className="yokohama.lang.test.ReportedBy" cacheType="partial" />
+
+		<MithraObjectConfiguration
+			className="yokohama.lang.test.Product" cacheType="partial" />
+
+		<MithraObjectConfiguration
+			className="yokohama.lang.test.BugProduct" cacheType="partial" />
+
+	</ConnectionManager>
+</MithraRuntime>

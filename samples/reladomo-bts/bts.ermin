@@ -1,0 +1,128 @@
+type rate = decimal(9, 2)
+
+identifier account_id = integer
+
+entity account
+  identified by account_id
+
+  attribute hourly_rate : rate
+
+  optional account_name   : varchar(20)
+  optional first_name     : varchar(20)
+  optional last_name      : varchar(20)
+  optional email          : varchar(100)
+  optional password_hash  : varchar(64)
+  optional portrait_image : blob
+
+code bug_status = "NEW" "WORKING" "CLOSED"
+
+identifier bug_id = integer
+
+entity bug
+  identified by bug_id
+
+  attribute date_reported : date
+  attribute status        : bug_status
+
+  optional summary     : varchar(80)
+  optional description : varchar(1000)
+  optional resolution  : varchar(1000)
+  optional priority    : varchar(20)
+  optional hours       : decimal(9, 2)
+
+relationship reported_by : bug * one account
+relationship assigned_to : bug * zero or one account
+relationship verified_by : bug * zero or one account
+
+-- function bug::reported-by : bug -> account
+-- predicate bug::is-latest : bug predicate
+-- predicate bug-product : bug * product predicate
+
+identifier comment_id = integer
+
+entity comment
+  identified by comment_id
+
+  attribute comment_date : date
+  attribute comment      : varchar(1000)
+
+relationship comment_bug : comment * one bug
+relationship author : comment * one account
+
+identifier image_id = integer
+
+entity screen_shot
+  identified by bug * image_id
+
+  optional screenshot_image : blob
+  optional caption          : varchar(100)
+
+identifier label = varchar(20)
+
+entity tag
+  identified by bug * label
+
+identifier product_id = integer
+
+entity product
+  identified by product_id
+
+  attribute product_name : varchar(50)
+
+relationship bug_product : bug * product
+
+{--
+
+process add-account(account-name : char[..20])
+
+  let new-account = new account { account-name = account-name }
+
+  account' = account + new-account
+
+process delete-account(account-name : char[..20])
+
+  let deleted-account : account set =
+    { x : account | account-name(x) = account-name }
+
+  account' = account - deleted-account
+
+process submit-bug (date : local-date, reporter : account)
+
+  bug' = bug + new bug { date-reported = date, reported-by = reporter, status = "NEW" }
+
+process assign-bug (bug : bug, assignee : account)
+
+  -- bug::assigned-to' = assigned-to + <bug, assignee>
+  update bug::assigned-to by <bug, assignee>
+  -- bug::status' = bug::status + <bug, "ASSIGNED">
+  update bug::status to by <bug, "ASSIGNED">
+
+-- for all d: local-date, top local-date >= d
+-- for all d: local-date, bottom local-date <= d
+
+
+--------------------
+
+entity user identified by int
+  attribute user-name : char[..45]
+
+relationship user::detail : one user * one user-detail
+relationship user::address1 : one user * one address
+relationship user::address2 : one user * one address
+
+entity address identified by int
+  attribute street : char[..45]
+  attribute city : char[..45]
+
+--------------------
+
+entity employee identified by int
+  attribute ename : char[..45]
+
+entity workstation identified by int
+  attribute workstation-number : int
+  attribute floor : char[..45]
+
+relationship emp-workstation : zero or one employee * zero or one workstation
+
+--}

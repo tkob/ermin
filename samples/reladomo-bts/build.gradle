@@ -1,0 +1,90 @@
+plugins {
+    id 'org.springframework.boot' version '2.1.7.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.7.RELEASE'
+    id 'java'
+    id 'eclipse'
+}
+
+group = 'sample'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+}
+
+ext.reladomoVersion = '17.0.1'
+ext.jflexVersion = '1.7.0'
+
+configurations {
+    erminGenTask
+    reladomoGenTask
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation "com.goldmansachs.reladomo:reladomo:$reladomoVersion"
+    runtimeOnly 'com.h2database:h2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    erminGenTask fileTree(dir: '../../build/libs', include: '*.jar')
+    erminGenTask "de.jflex:jflex:$jflexVersion"
+    erminGenTask "org.apache.commons:commons-lang3:3.9"
+
+    reladomoGenTask "com.goldmansachs.reladomo:reladomogen:$reladomoVersion"
+    reladomoGenTask "com.goldmansachs.reladomo:reladomo-gen-util:$reladomoVersion"
+}
+
+task genErmin {
+    doLast {
+        file("build/generated/reladomo").mkdirs()
+        ant.taskdef(name: "genErmin",
+                classpath: configurations.erminGenTask.asPath,
+                classname: "yokohama.lang.ermin.ant.Reladomo")
+        ant.genErmin(source: "bts.ermin",
+                destination: "build/generated/reladomo")
+    }
+}
+
+task genReladomo {
+    doLast {
+        ant.taskdef(name: "genReladomo",
+                classpath: configurations.reladomoGenTask.asPath,
+                classname: "com.gs.fw.common.mithra.generator.MithraGenerator")
+        ant.genReladomo(xml: "$projectDir/build/generated/reladomo/ReladomoClassList.xml",
+                generateEcListMethod: "true",
+                generatedDir: "$buildDir/generated/sources/reladomo",
+                nonGeneratedDir: "$projectDir/src/main/java")
+    }
+}
+
+task genDdl {
+    doLast {
+        ant.taskdef(name: "genDdl",
+                classpath: configurations.reladomoGenTask.asPath,
+                classname: "com.gs.fw.common.mithra.generator.dbgenerator.MithraDbDefinitionGenerator")
+        ant.genDdl(xml: "$projectDir/build/generated/reladomo/ReladomoClassList.xml",
+                generatedDir: "$projectDir/build/generated/sql",
+                databaseType: "postgres")
+    }
+}
+
+compileJava.dependsOn(genReladomo)
+genReladomo.dependsOn(genErmin)
+genDdl.dependsOn(genErmin)
+
+sourceSets {
+    main {
+        java {
+            srcDir 'build/generated/sources/reladomo'
+        }
+        /*
+            "generated-db" is added to resource because the sample app
+            loads generated ddl/idx files to initialize h2 db in memory.
+            No need to do this for typical production apps.
+        */
+        resources {
+            output.dir('build/generated/sql', builtBy:genDdl)
+        }
+    }
+}
