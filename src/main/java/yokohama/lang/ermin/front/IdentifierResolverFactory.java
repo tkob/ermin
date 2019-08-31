@@ -64,19 +64,22 @@ public class IdentifierResolverFactory {
 
                         @Override
                         public Void visit(CharIdType p, IdentifierDef arg) {
-                            nameToType.put(ErminName.fromSnake(arg.ident_), new ErminCharType(p.integer_));
+                            nameToType.put(ErminName.fromSnake(arg.ident_),
+                                    new ErminCharType(p.integer_));
                             return null;
                         }
 
                         @Override
                         public Void visit(VarCharIdType p, IdentifierDef arg) {
-                            nameToType.put(ErminName.fromSnake(arg.ident_), new ErminVarCharType(p.integer_));
+                            nameToType.put(ErminName.fromSnake(arg.ident_),
+                                    new ErminVarCharType(p.integer_));
                             return null;
                         }
 
                         @Override
                         public Void visit(IntegerIdType p, IdentifierDef arg) {
-                            nameToType.put(ErminName.fromSnake(arg.ident_), new ErminIntegerType());
+                            nameToType.put(ErminName.fromSnake(arg.ident_),
+                                    new ErminIntegerType());
                             return null;
                         }
                     }, identifierDef);

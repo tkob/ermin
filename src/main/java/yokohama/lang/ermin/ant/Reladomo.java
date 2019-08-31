@@ -71,8 +71,7 @@ public class Reladomo extends Task {
 
             // Create the Reladomo class list
             {
-                final JAXBContext context = JAXBContext.newInstance(
-                        MithraType.class);
+                final JAXBContext context = JAXBContext.newInstance(MithraType.class);
                 final Marshaller marshaller = context.createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
