@@ -16,34 +16,29 @@ import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
-import yokohama.lang.ermin.Absyn.DefaultEntityRelationship;
+import yokohama.lang.ermin.Absyn.DefaultRelationshipType;
 import yokohama.lang.ermin.Absyn.EntityDef;
-import yokohama.lang.ermin.Absyn.EntityRelationship;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.ListAttribute;
-import yokohama.lang.ermin.Absyn.Multiplicity;
-import yokohama.lang.ermin.Absyn.NumericOneMultiplicity;
-import yokohama.lang.ermin.Absyn.NumericOneOreMoreMultiplicity;
-import yokohama.lang.ermin.Absyn.NumericZeroOrMoreMultiplicity;
-import yokohama.lang.ermin.Absyn.NumericZeroOrOneMultiplicity;
-import yokohama.lang.ermin.Absyn.OneMultiplicity;
-import yokohama.lang.ermin.Absyn.OneOreMoreMultiplicity;
-import yokohama.lang.ermin.Absyn.ProductRelationship;
+import yokohama.lang.ermin.Absyn.NumericOneOreMoreRelationshipType;
+import yokohama.lang.ermin.Absyn.NumericOneRelationshipType;
+import yokohama.lang.ermin.Absyn.NumericZeroOrMoreRelationshipType;
+import yokohama.lang.ermin.Absyn.NumericZeroOrOneRelationshipType;
+import yokohama.lang.ermin.Absyn.OneOreMoreRelationshipType;
+import yokohama.lang.ermin.Absyn.OneRelationshipType;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.RelationshipType;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
-import yokohama.lang.ermin.Absyn.ZeroOrMoreMultiplicity;
-import yokohama.lang.ermin.Absyn.ZeroOrOneMultiplicity;
+import yokohama.lang.ermin.Absyn.ZeroOrMoreRelationshipType;
+import yokohama.lang.ermin.Absyn.ZeroOrOneRelationshipType;
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.attribute.ErminKey;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
-import yokohama.lang.ermin.relationship.ErminAtomicRelationshipExp;
 import yokohama.lang.ermin.relationship.ErminMultiplicity;
-import yokohama.lang.ermin.relationship.ErminProductRelationshipExp;
 import yokohama.lang.ermin.relationship.ErminRelationship;
 import yokohama.lang.ermin.relationship.ErminRelationshipExp;
 
@@ -161,9 +156,9 @@ public class FrontEndProcessor {
 
     public ErminRelationship toErminRelationship(final RelationshipDef relationshipDef) {
         ErminName name = ErminName.fromSnake(relationshipDef.ident_);
-        ErminRelationshipExp exp = toErminRelationshipExp(
-                relationshipDef.relationshiptype_);
-        return new ErminRelationship(name, exp);
+        List<ErminRelationshipExp> exps = relationshipDef.listrelationshiptype_.stream()
+                .map(this::toErminRelationshipExp).collect(Collectors.toList());
+        return new ErminRelationship(name, exps);
     }
 
     public ErminRelationshipExp toErminRelationshipExp(
@@ -172,72 +167,70 @@ public class FrontEndProcessor {
                 new RelationshipType.Visitor<ErminRelationshipExp, Void>() {
 
                     @Override
-                    public ErminRelationshipExp visit(ProductRelationship p, Void arg) {
-                        return new ErminProductRelationshipExp(toErminRelationshipExp(
-                                p.relationshiptype_1), toErminRelationshipExp(
-                                        p.relationshiptype_2));
-                    }
-
-                    @Override
-                    public ErminRelationshipExp visit(EntityRelationship p, Void arg) {
-                        return new ErminAtomicRelationshipExp(p.multiplicity_.accept(
-                                new Multiplicity.Visitor<ErminMultiplicity, Void>() {
-
-                                    @Override
-                                    public ErminMultiplicity visit(OneMultiplicity p,
-                                            Void arg) {
-                                        return ErminMultiplicity.ONE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            ZeroOrOneMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ZERO_OR_ONE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            ZeroOrMoreMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ZERO_OR_MORE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            OneOreMoreMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ONE_OR_MORE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            NumericOneMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ONE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            NumericZeroOrOneMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ZERO_OR_ONE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            NumericZeroOrMoreMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ZERO_OR_MORE;
-                                    }
-
-                                    @Override
-                                    public ErminMultiplicity visit(
-                                            NumericOneOreMoreMultiplicity p, Void arg) {
-                                        return ErminMultiplicity.ONE_OR_MORE;
-                                    }
-                                }, null), ErminName.fromSnake(p.ident_));
-                    }
-
-                    @Override
-                    public ErminRelationshipExp visit(DefaultEntityRelationship p,
-                            Void arg) {
-                        return new ErminAtomicRelationshipExp(ErminMultiplicity.ZERO_OR_MORE, ErminName
+                    public ErminRelationshipExp visit(OneRelationshipType p, Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ONE, ErminName
                                 .fromSnake(p.ident_));
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(ZeroOrOneRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ZERO_OR_ONE, ErminName
+                                .fromSnake(p.ident_));
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(ZeroOrMoreRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ZERO_OR_MORE, ErminName
+                                .fromSnake(p.ident_));
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(OneOreMoreRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ONE_OR_MORE, ErminName
+                                .fromSnake(p.ident_));
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(NumericOneRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ONE, ErminName
+                                .fromSnake(p.ident_));
+
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(NumericZeroOrOneRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ZERO_OR_ONE, ErminName
+                                .fromSnake(p.ident_));
+
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(NumericZeroOrMoreRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ZERO_OR_MORE, ErminName
+                                .fromSnake(p.ident_));
+
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(NumericOneOreMoreRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ONE_OR_MORE, ErminName
+                                .fromSnake(p.ident_));
+
+                    }
+
+                    @Override
+                    public ErminRelationshipExp visit(DefaultRelationshipType p,
+                            Void arg) {
+                        return new ErminRelationshipExp(ErminMultiplicity.ZERO_OR_MORE, ErminName
+                                .fromSnake(p.ident_));
+
                     }
                 }, null);
     }

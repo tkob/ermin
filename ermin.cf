@@ -5,7 +5,7 @@ CodeDef.          Def ::= "code" Ident "=" [Code] ;
 IdentifierDef.    Def ::= "identifier" Ident "=" IdentifierType ;
 EntityDef.        Def ::= "entity" Ident "identified" "by" [Ident] [Attribute] ;
 KeyOnlyEntityDef. Def ::= "entity" Ident "identified" "by" [Ident] ;
-RelationshipDef.  Def ::= "relationship" Ident ":" RelationshipType ;
+RelationshipDef.  Def ::= "relationship" Ident ":" [RelationshipType] ;
 terminator nonempty Def "" ;
 separator nonempty Ident "*" ;
 
@@ -24,19 +24,16 @@ CharIdType.    IdentifierType ::= "char" "(" Integer ")" ;
 VarCharIdType. IdentifierType ::= "varchar" "(" Integer ")" ;
 IntegerIdType. IdentifierType ::= "integer" ;
 
-ProductRelationship.        RelationshipType  ::= RelationshipType "*" RelationshipType1 ;
-EntityRelationship.         RelationshipType1 ::= Multiplicity Ident ;
-DefaultEntityRelationship.  RelationshipType1 ::= Ident ;
-coercions RelationshipType 1 ;
-
-OneMultiplicity. Multiplicity ::= "one" ;
-ZeroOrOneMultiplicity. Multiplicity ::= "zero" "or" "one" ;
-ZeroOrMoreMultiplicity. Multiplicity ::= "zero" "or" "more" ;
-OneOreMoreMultiplicity. Multiplicity ::= "one" "or" "more" ;
-NumericOneMultiplicity. Multiplicity ::= "1" ;
-NumericZeroOrOneMultiplicity. Multiplicity ::= "0,1" ;
-NumericZeroOrMoreMultiplicity. Multiplicity ::= "0.." ;
-NumericOneOreMoreMultiplicity. Multiplicity ::= "1.." ;
+OneRelationshipType.               RelationshipType ::= "one" Ident ;
+ZeroOrOneRelationshipType.         RelationshipType ::= "zero" "or" "one" Ident ;
+ZeroOrMoreRelationshipType.        RelationshipType ::= "zero" "or" "more" Ident ;
+OneOreMoreRelationshipType.        RelationshipType ::= "one" "or" "more" Ident ;
+NumericOneRelationshipType.        RelationshipType ::= "1" Ident ;
+NumericZeroOrOneRelationshipType.  RelationshipType ::= "0,1" Ident ;
+NumericZeroOrMoreRelationshipType. RelationshipType ::= "0.." Ident ;
+NumericOneOreMoreRelationshipType. RelationshipType ::= "1.." Ident ;
+DefaultRelationshipType.           RelationshipType ::= Ident ;
+separator nonempty RelationshipType "*" ;
 
 StringCode. Code ::= String ;
 terminator nonempty Code "" ;

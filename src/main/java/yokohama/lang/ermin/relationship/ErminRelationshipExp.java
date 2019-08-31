@@ -1,7 +1,11 @@
 package yokohama.lang.ermin.relationship;
 
-public interface ErminRelationshipExp {
-    <R> R accept(ErminRelationshipExpVisitor<R> visitor);
+import lombok.Value;
+import yokohama.lang.ermin.attribute.ErminName;
 
-    int getArity();
+@Value
+public class ErminRelationshipExp {
+    private final ErminMultiplicity multiplicity;
+
+    private final ErminName name;
 }

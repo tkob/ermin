@@ -18,12 +18,9 @@ import yokohama.lang.ermin.front.CodeResolver;
 import yokohama.lang.ermin.front.ErminTuple;
 import yokohama.lang.ermin.front.FrontEndProcessor;
 import yokohama.lang.ermin.front.Resolver;
-import yokohama.lang.ermin.relationship.ErminAtomicRelationshipExp;
 import yokohama.lang.ermin.relationship.ErminMultiplicity;
-import yokohama.lang.ermin.relationship.ErminProductRelationshipExp;
 import yokohama.lang.ermin.relationship.ErminRelationship;
 import yokohama.lang.ermin.relationship.ErminRelationshipExp;
-import yokohama.lang.ermin.relationship.ErminRelationshipExpVisitor;
 import yokohama.lang.reladomo.AttributePureType;
 import yokohama.lang.reladomo.AttributeType;
 import yokohama.lang.reladomo.CardinalityType;
@@ -126,7 +123,8 @@ public class ReladomoTranslator {
             final Resolver<ErminName, ErminEntity> entityResolver,
             final CodeResolver codeResolver,
             Map<ErminName, MithraObjectType> mithraObjects) {
-        final Iterable<ErminName> exps = flattenRelationshipExps(relationship.getExp());
+        final Iterable<ErminName> exps = relationship.getExps().stream().map(exp -> exp
+                .getName()).collect(Collectors.toList());
 
         final MithraObjectType mithraObject = factory.createMithraObjectType();
         mithraObject.setObjectType(ObjectType.TRANSACTIONAL);
@@ -155,8 +153,8 @@ public class ReladomoTranslator {
         mithraObjects.put(relationship.getName(), mithraObject);
 
         // Add Relationship elements to existing entities if the arity is 2.
-        relationship.applyBiFunction((ErminAtomicRelationshipExp left,
-                ErminAtomicRelationshipExp right) -> {
+        relationship.applyBiFunction((ErminRelationshipExp left,
+                ErminRelationshipExp right) -> {
             final List<RelationshipType> relationships = mithraObjects.get(left.getName())
                     .getRelationship();
             RelationshipType relationshipType = factory.createRelationshipType();
@@ -185,26 +183,6 @@ public class ReladomoTranslator {
             return null;
         });
 
-    }
-
-    Collection<ErminName> flattenRelationshipExps(final ErminRelationshipExp exp) {
-        return exp.accept(new ErminRelationshipExpVisitor<List<ErminName>>() {
-
-            @Override
-            public List<ErminName> visitAtomicRelationshipExp(
-                    final ErminAtomicRelationshipExp atomicRelationshipExp) {
-                return Collections.singletonList(atomicRelationshipExp.getName());
-            }
-
-            @Override
-            public List<ErminName> visitProductRelationshipExp(
-                    final ErminProductRelationshipExp productRelationshipExp) {
-                final List<ErminName> union = new ArrayList<>();
-                union.addAll(flattenRelationshipExps(productRelationshipExp.getLeft()));
-                union.addAll(flattenRelationshipExps(productRelationshipExp.getRight()));
-                return union;
-            }
-        });
     }
 
     String translateMultiplicity(final ErminMultiplicity multiplicity) {

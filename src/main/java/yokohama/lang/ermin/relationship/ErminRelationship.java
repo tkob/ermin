@@ -1,5 +1,6 @@
 package yokohama.lang.ermin.relationship;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -10,66 +11,14 @@ import yokohama.lang.ermin.attribute.ErminName;
 public class ErminRelationship {
     private final ErminName name;
 
-    private final ErminRelationshipExp exp;
-
-    public int getArity() {
-        return exp.getArity();
-    }
+    private final List<ErminRelationshipExp> exps;
 
     public <R> Optional<R> applyBiFunction(
-            BiFunction<ErminAtomicRelationshipExp, ErminAtomicRelationshipExp, R> f) {
-
-        return this.getExp().accept(new ErminRelationshipExpVisitor<Optional<R>>() {
-
-            @Override
-            public Optional<R> visitAtomicRelationshipExp(
-                    ErminAtomicRelationshipExp atomicRelationshipExp) {
-
-                // unary relationship
-                return Optional.empty();
-            }
-
-            @Override
-            public Optional<R> visitProductRelationshipExp(
-                    ErminProductRelationshipExp productRelationshipExp) {
-
-                return productRelationshipExp.getLeft().accept(
-                        new ErminRelationshipExpVisitor<Optional<R>>() {
-
-                            @Override
-                            public Optional<R> visitAtomicRelationshipExp(
-                                    ErminAtomicRelationshipExp left) {
-
-                                return productRelationshipExp.getRight().accept(
-                                        new ErminRelationshipExpVisitor<Optional<R>>() {
-
-                                            @Override
-                                            public Optional<R> visitAtomicRelationshipExp(
-                                                    ErminAtomicRelationshipExp right) {
-
-                                                // binary relationship
-                                                return Optional.ofNullable(f.apply(left, right));
-                                            }
-
-                                            @Override
-                                            public Optional<R> visitProductRelationshipExp(
-                                                    ErminProductRelationshipExp productRelationshipExp) {
-
-                                                // multi relationship
-                                                return Optional.empty();
-                                            }
-                                        });
-                            }
-
-                            @Override
-                            public Optional<R> visitProductRelationshipExp(
-                                    ErminProductRelationshipExp productRelationshipExp) {
-
-                                // multi relationship
-                                return Optional.empty();
-                            }
-                        });
-            }
-        });
+            BiFunction<ErminRelationshipExp, ErminRelationshipExp, R> f) {
+        if (exps.size() == 2) {
+            return Optional.ofNullable(f.apply(exps.get(0), exps.get(1)));
+        } else {
+            return Optional.empty();
+        }
     }
 }
