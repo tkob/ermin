@@ -1,11 +1,12 @@
 TopDefinitions. Top ::= [Def] ;
 
-TypeDef.          Def ::= "type" Ident "=" Type ;
-CodeDef.          Def ::= "code" Ident "=" [Code] ;
-IdentifierDef.    Def ::= "identifier" Ident "=" IdentifierType ;
-EntityDef.        Def ::= "entity" Ident "identified" "by" [Ident] [Attribute] ;
-KeyOnlyEntityDef. Def ::= "entity" Ident "identified" "by" [Ident] ;
-RelationshipDef.  Def ::= "relationship" Ident ":" [RelationshipType] ;
+TypeDef.            Def ::= "type" Ident "=" Type ;
+CodeDef.            Def ::= "code" Ident "=" [Code] ;
+IdentifierDef.      Def ::= "identifier" Ident "=" IdentifierType ;
+EntityDef.          Def ::= "entity" Ident "identified" "by" [Ident] [Attribute] ;
+KeyOnlyEntityDef.   Def ::= "entity" Ident "identified" "by" [Ident] ;
+RelationshipDef.    Def ::= "relationship" Ident ":" [RelationshipType] ;
+AbstractProcessDef. Def ::= "abstract" "process" Ident "(" [Argument] ")" [Statement] ;
 terminator nonempty Def "" ;
 separator nonempty Ident "*" ;
 
@@ -43,6 +44,17 @@ MandatoryAttribute. Attribute ::= "attribute" Ident ":" Type ;
 OptionalAttribute.  Attribute ::= "optional" Ident ":" Type ;
 UniqueAttribute.    Attribute ::= "unique" Ident ":" Type ;
 terminator nonempty Attribute "" ;
+
+NewEntityArgument.      Argument ::= Ident "=" "new" Ident ;
+ExistingEntityArgument. Argument ::= Ident "in" Ident ;
+separator nonempty Argument "," ;
+
+InsertStatement. Statement ::= Ident "+=" Exp ;
+DeleteStatement. Statement ::= Ident "-=" Exp ;
+UpdateStatement. Statement ::= Ident "~=" "<" Exp "," Exp ">" ;
+separator nonempty Statement "" ;
+
+VarExp. Exp ::= Ident ;
 
 comment "--" ;
 comment "{--" "--}" ;

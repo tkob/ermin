@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
+import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.DefaultRelationshipType;
@@ -273,6 +274,11 @@ public class FrontEndProcessor {
                     public Stream<EntityDef> visit(RelationshipDef p, Void arg) {
                         return Stream.<EntityDef> empty();
                     }
+
+                    @Override
+                    public Stream<EntityDef> visit(AbstractProcessDef p, Void arg) {
+                        return Stream.<EntityDef> empty();
+                    }
                 }, null));
     }
 
@@ -308,6 +314,11 @@ public class FrontEndProcessor {
                     @Override
                     public Stream<RelationshipDef> visit(RelationshipDef p, Void arg) {
                         return Stream.of(p);
+                    }
+
+                    @Override
+                    public Stream<RelationshipDef> visit(AbstractProcessDef p, Void arg) {
+                        return Stream.<RelationshipDef> empty();
                     }
                 }, null));
     }

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
+import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.CharIdType;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
@@ -127,6 +128,11 @@ public class IdentifierResolverFactory {
 
                     @Override
                     public Stream<IdentifierDef> visit(RelationshipDef p, Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<IdentifierDef> visit(AbstractProcessDef p, Void arg) {
                         return Stream.empty();
                     }
                 }, null));

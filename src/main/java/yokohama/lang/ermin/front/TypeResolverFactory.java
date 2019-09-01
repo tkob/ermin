@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
+import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.BlobType;
 import yokohama.lang.ermin.Absyn.CharType;
 import yokohama.lang.ermin.Absyn.ClobType;
@@ -217,6 +218,11 @@ public class TypeResolverFactory {
 
                     @Override
                     public Stream<TypeDef> visit(RelationshipDef p, Void arg) {
+                        return Stream.<TypeDef> empty();
+                    }
+
+                    @Override
+                    public Stream<TypeDef> visit(AbstractProcessDef p, Void arg) {
                         return Stream.<TypeDef> empty();
                     }
                 }, null));

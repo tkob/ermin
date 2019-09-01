@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.Code;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
@@ -118,6 +119,11 @@ public class CodeResolverFactory {
 
                     @Override
                     public Stream<CodeDef> visit(RelationshipDef p, Void arg) {
+                        return Stream.<CodeDef> empty();
+                    }
+
+                    @Override
+                    public Stream<CodeDef> visit(AbstractProcessDef p, Void arg) {
                         return Stream.<CodeDef> empty();
                     }
                 }, null));
