@@ -158,6 +158,10 @@ public class FrontEndProcessor {
         ErminName name = ErminName.fromSnake(relationshipDef.ident_);
         List<ErminRelationshipExp> exps = relationshipDef.listrelationshiptype_.stream()
                 .map(this::toErminRelationshipExp).collect(Collectors.toList());
+        if (exps.size() >= 3 && exps.stream().anyMatch(exp -> exp
+                .getMultiplicity() != ErminMultiplicity.ZERO_OR_MORE)) {
+            throw new RuntimeException("multirelation cannot have multiplicity other than zero or more");
+        }
         return new ErminRelationship(name, exps);
     }
 
