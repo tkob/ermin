@@ -15,13 +15,19 @@ import java.util.stream.Stream;
 import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
 import yokohama.lang.ermin.Absyn.AbstractProcessDef;
+import yokohama.lang.ermin.Absyn.Argument;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.DefaultRelationshipType;
+import yokohama.lang.ermin.Absyn.DeleteStatement;
 import yokohama.lang.ermin.Absyn.EntityDef;
+import yokohama.lang.ermin.Absyn.ExistingEntityArgument;
+import yokohama.lang.ermin.Absyn.Exp;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
+import yokohama.lang.ermin.Absyn.InsertStatement;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.ListAttribute;
+import yokohama.lang.ermin.Absyn.NewEntityArgument;
 import yokohama.lang.ermin.Absyn.NumericOneOreMoreRelationshipType;
 import yokohama.lang.ermin.Absyn.NumericOneRelationshipType;
 import yokohama.lang.ermin.Absyn.NumericZeroOrMoreRelationshipType;
@@ -30,15 +36,28 @@ import yokohama.lang.ermin.Absyn.OneOreMoreRelationshipType;
 import yokohama.lang.ermin.Absyn.OneRelationshipType;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.RelationshipType;
+import yokohama.lang.ermin.Absyn.Statement;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
 import yokohama.lang.ermin.Absyn.TypeDef;
+import yokohama.lang.ermin.Absyn.UpdateStatement;
+import yokohama.lang.ermin.Absyn.VarExp;
 import yokohama.lang.ermin.Absyn.ZeroOrMoreRelationshipType;
 import yokohama.lang.ermin.Absyn.ZeroOrOneRelationshipType;
 import yokohama.lang.ermin.attribute.ErminAttribute;
 import yokohama.lang.ermin.attribute.ErminKey;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
+import yokohama.lang.ermin.process.ErminAbstractProcess;
+import yokohama.lang.ermin.process.ErminArgument;
+import yokohama.lang.ermin.process.ErminDeleteStatement;
+import yokohama.lang.ermin.process.ErminExistingEntityArgument;
+import yokohama.lang.ermin.process.ErminExp;
+import yokohama.lang.ermin.process.ErminInsertStatement;
+import yokohama.lang.ermin.process.ErminNewEntityArgument;
+import yokohama.lang.ermin.process.ErminStatement;
+import yokohama.lang.ermin.process.ErminUpdateStatement;
+import yokohama.lang.ermin.process.ErminVarExp;
 import yokohama.lang.ermin.relationship.ErminMultiplicity;
 import yokohama.lang.ermin.relationship.ErminRelationship;
 import yokohama.lang.ermin.relationship.ErminRelationshipExp;
@@ -117,7 +136,19 @@ public class FrontEndProcessor {
                     }
                 }, typeResolver);
 
-        return new ErminTuple(codeResolver, typeResolver, entityResolver, entities, relationships);
+        final Collection<ErminAbstractProcess> abstractProcesses = top.accept(
+                new Top.Visitor<Collection<ErminAbstractProcess>, TypeResolver>() {
+
+                    @Override
+                    public Collection<ErminAbstractProcess> visit(final TopDefinitions p,
+                            TypeResolver arg) {
+                        return filterAbstractProcessDef(p.listdef_.stream()).map(
+                                abstractProcessDef -> toErminAbstractProcess(
+                                        abstractProcessDef)).collect(Collectors.toList());
+                    }
+                }, typeResolver);
+
+        return new ErminTuple(codeResolver, typeResolver, entityResolver, entities, relationships, abstractProcesses);
     }
 
     public ErminEntity toErminEntity(EntityDef entityDef, TypeResolver typeResolver,
@@ -240,6 +271,66 @@ public class FrontEndProcessor {
                 }, null);
     }
 
+    public ErminAbstractProcess toErminAbstractProcess(
+            final AbstractProcessDef abstractProcessDef) {
+        final ErminName name = ErminName.fromSnake(abstractProcessDef.ident_);
+
+        final List<ErminArgument> arguments = abstractProcessDef.listargument_.stream()
+                .map(argument -> argument.accept(
+                        new Argument.Visitor<ErminArgument, Void>() {
+
+                            @Override
+                            public ErminArgument visit(NewEntityArgument p, Void arg) {
+                                return new ErminNewEntityArgument(p.ident_1, ErminName
+                                        .fromSnake(p.ident_2));
+                            }
+
+                            @Override
+                            public ErminArgument visit(ExistingEntityArgument p,
+                                    Void arg) {
+                                return new ErminExistingEntityArgument(p.ident_1, ErminName
+                                        .fromSnake(p.ident_2));
+                            }
+                        }, null)).collect(Collectors.toList());
+
+        final List<ErminStatement> statements = abstractProcessDef.liststatement_.stream()
+                .map(statement -> statement.accept(
+                        new Statement.Visitor<ErminStatement, Void>() {
+
+                            @Override
+                            public ErminStatement visit(InsertStatement p, Void arg) {
+                                return new ErminInsertStatement(ErminName.fromSnake(
+                                        p.ident_), toErminExp(p.exp_));
+                            }
+
+                            @Override
+                            public ErminStatement visit(DeleteStatement p, Void arg) {
+                                return new ErminDeleteStatement(ErminName.fromSnake(
+                                        p.ident_), toErminExp(p.exp_));
+                            }
+
+                            @Override
+                            public ErminStatement visit(UpdateStatement p, Void arg) {
+                                return new ErminUpdateStatement(ErminName.fromSnake(
+                                        p.ident_), p.listexp_.stream().map(
+                                                exp -> toErminExp(exp)).collect(Collectors
+                                                        .toList()));
+                            }
+                        }, null)).collect(Collectors.toList());
+
+        return new ErminAbstractProcess(name, arguments, statements);
+    }
+
+    public ErminExp toErminExp(Exp exp) {
+        return exp.accept(new Exp.Visitor<ErminExp, Void>() {
+
+            @Override
+            public ErminExp visit(VarExp p, Void arg) {
+                return new ErminVarExp(p.ident_);
+            }
+        }, null);
+    }
+
     public Stream<EntityDef> filterEntityDef(final Stream<Def> defs) {
         return defs.flatMap((Def def) -> def.accept(
                 new Def.Visitor<Stream<EntityDef>, Void>() {
@@ -319,6 +410,49 @@ public class FrontEndProcessor {
                     @Override
                     public Stream<RelationshipDef> visit(AbstractProcessDef p, Void arg) {
                         return Stream.<RelationshipDef> empty();
+                    }
+                }, null));
+    }
+
+    public Stream<AbstractProcessDef> filterAbstractProcessDef(final Stream<Def> defs) {
+        return defs.flatMap((Def def) -> def.accept(
+                new Def.Visitor<Stream<AbstractProcessDef>, Void>() {
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(TypeDef p, Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(CodeDef p, Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(IdentifierDef p, Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(EntityDef p, Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(KeyOnlyEntityDef p,
+                            Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(RelationshipDef p, Void arg) {
+                        return Stream.empty();
+                    }
+
+                    @Override
+                    public Stream<AbstractProcessDef> visit(AbstractProcessDef p,
+                            Void arg) {
+                        return Stream.of(p);
                     }
                 }, null));
     }
