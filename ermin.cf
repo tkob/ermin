@@ -51,10 +51,11 @@ separator nonempty Argument "," ;
 
 InsertStatement. Statement ::= Ident "+=" Exp ;
 DeleteStatement. Statement ::= Ident "-=" Exp ;
-UpdateStatement. Statement ::= Ident "~=" "<" Exp "," Exp ">" ;
+UpdateStatement. Statement ::= Ident "~=" "<" [Exp] ">" ;
 separator nonempty Statement "" ;
 
 VarExp. Exp ::= Ident ;
+separator nonempty Exp "," ;
 
 comment "--" ;
 comment "{--" "--}" ;
