@@ -37,8 +37,8 @@ public class IdentifierResolverFactory {
 
             @Override
             public TypeResolver visit(TopDefinitions p, Void arg) {
-                Stream<IdentifierDef> identifierDefs = filterIdentifierDef(p.listdef_
-                        .stream());
+                Stream<IdentifierDef> identifierDefs = filterIdentifierDef(
+                        p.listdef_.stream());
                 return fromIdentifierDefs(identifierDefs.collect(Collectors.toList()));
             }
         }, null);
@@ -60,8 +60,8 @@ public class IdentifierResolverFactory {
         Map<ErminName, ErminType> nameToType = new HashMap<>();
 
         identifierDefs.forEach(identifierDef -> {
-            identifierDef.identifiertype_.accept(
-                    new IdentifierType.Visitor<Void, IdentifierDef>() {
+            identifierDef.identifiertype_
+                    .accept(new IdentifierType.Visitor<Void, IdentifierDef>() {
 
                         @Override
                         public Void visit(CharIdType p, IdentifierDef arg) {
@@ -98,8 +98,8 @@ public class IdentifierResolverFactory {
     }
 
     public Stream<IdentifierDef> filterIdentifierDef(final Stream<Def> defs) {
-        return defs.flatMap(def -> def.accept(
-                new Def.Visitor<Stream<IdentifierDef>, Void>() {
+        return defs.flatMap(
+                def -> def.accept(new Def.Visitor<Stream<IdentifierDef>, Void>() {
 
                     @Override
                     public Stream<IdentifierDef> visit(TypeDef p, Void arg) {

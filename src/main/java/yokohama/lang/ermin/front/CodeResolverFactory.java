@@ -75,8 +75,8 @@ public class CodeResolverFactory {
 
             @Override
             public int maxLength(ErminName name) {
-                Stream<String> codes = StreamSupport.stream(this.resolveOrThrow(name)
-                        .spliterator(), false);
+                Stream<String> codes = StreamSupport
+                        .stream(this.resolveOrThrow(name).spliterator(), false);
                 return codes.max(new Comparator<String>() {
                     @Override
                     public int compare(String code1, String code2) {
@@ -89,8 +89,8 @@ public class CodeResolverFactory {
     }
 
     public Stream<CodeDef> filterCodeDef(final Stream<Def> defs) {
-        return defs.flatMap((Def def) -> def.accept(
-                new Def.Visitor<Stream<CodeDef>, Void>() {
+        return defs.flatMap(
+                (Def def) -> def.accept(new Def.Visitor<Stream<CodeDef>, Void>() {
 
                     @Override
                     public Stream<CodeDef> visit(TypeDef p, Void arg) {

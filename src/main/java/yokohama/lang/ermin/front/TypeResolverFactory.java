@@ -188,8 +188,8 @@ public class TypeResolverFactory {
     }
 
     public Stream<TypeDef> filterTypeDef(final Stream<Def> defs) {
-        return defs.flatMap((Def def) -> def.accept(
-                new Def.Visitor<Stream<TypeDef>, Void>() {
+        return defs.flatMap(
+                (Def def) -> def.accept(new Def.Visitor<Stream<TypeDef>, Void>() {
 
                     @Override
                     public Stream<TypeDef> visit(TypeDef p, Void arg) {

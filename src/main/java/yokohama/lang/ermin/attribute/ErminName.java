@@ -31,8 +31,8 @@ public class ErminName {
     }
 
     public String toLowerSnake() {
-        return parts.stream().map(part -> part.toLowerCase()).collect(Collectors.joining(
-                "_"));
+        return parts.stream().map(part -> part.toLowerCase())
+                .collect(Collectors.joining("_"));
     }
 
     public static ErminName fromSnake(String snake) {

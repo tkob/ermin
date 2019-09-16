@@ -14,20 +14,20 @@ public class AbsynAttributeToErminAttribute implements
 
     @Override
     public ErminAttribute visit(MandatoryAttribute p, TypeResolver typeResolver) {
-        return new ErminAttribute(AttributeSpecifier.MANDATORY, ErminName.fromSnake(
-                p.ident_), p.type_.accept(absynTypeToErminType, typeResolver));
+        return new ErminAttribute(AttributeSpecifier.MANDATORY, ErminName
+                .fromSnake(p.ident_), p.type_.accept(absynTypeToErminType, typeResolver));
     }
 
     @Override
     public ErminAttribute visit(OptionalAttribute p, TypeResolver typeResolver) {
-        return new ErminAttribute(AttributeSpecifier.OPTIONAL, ErminName.fromSnake(
-                p.ident_), p.type_.accept(absynTypeToErminType, typeResolver));
+        return new ErminAttribute(AttributeSpecifier.OPTIONAL, ErminName
+                .fromSnake(p.ident_), p.type_.accept(absynTypeToErminType, typeResolver));
     }
 
     @Override
     public ErminAttribute visit(UniqueAttribute p, TypeResolver typeResolver) {
-        return new ErminAttribute(AttributeSpecifier.UNIQUE, ErminName.fromSnake(
-                p.ident_), p.type_.accept(absynTypeToErminType, typeResolver));
+        return new ErminAttribute(AttributeSpecifier.UNIQUE, ErminName
+                .fromSnake(p.ident_), p.type_.accept(absynTypeToErminType, typeResolver));
     }
 
 }

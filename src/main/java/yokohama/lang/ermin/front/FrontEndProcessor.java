@@ -92,16 +92,16 @@ public class FrontEndProcessor {
                 codeResolver);
         final TypeResolver identifierResolver = identifierResolverFactory.fromAbsyn(top);
 
-        final Map<ErminName, ErminEntity> nameToEntity = top.accept(
-                new Top.Visitor<Map<ErminName, ErminEntity>, TypeResolver>() {
+        final Map<ErminName, ErminEntity> nameToEntity = top
+                .accept(new Top.Visitor<Map<ErminName, ErminEntity>, TypeResolver>() {
                     @Override
                     public Map<ErminName, ErminEntity> visit(final TopDefinitions p,
                             final TypeResolver typeResolver) {
                         List<EntityDef> entityDefs = filterEntityDef(p.listdef_.stream())
                                 .collect(Collectors.toList());
 
-                        List<ErminName> entityNames = entityDefs.stream().map(
-                                entityDef -> ErminName.fromSnake(entityDef.ident_))
+                        List<ErminName> entityNames = entityDefs.stream()
+                                .map(entityDef -> ErminName.fromSnake(entityDef.ident_))
                                 .collect(Collectors.toList());
 
                         Map<ErminName, ErminEntity> nameToEntity = new HashMap<>();
@@ -124,8 +124,8 @@ public class FrontEndProcessor {
 
         final Collection<ErminEntity> entities = nameToEntity.values();
 
-        final Collection<ErminRelationship> relationships = top.accept(
-                new Top.Visitor<Collection<ErminRelationship>, TypeResolver>() {
+        final Collection<ErminRelationship> relationships = top
+                .accept(new Top.Visitor<Collection<ErminRelationship>, TypeResolver>() {
 
                     @Override
                     public Collection<ErminRelationship> visit(final TopDefinitions p,
@@ -142,9 +142,10 @@ public class FrontEndProcessor {
                     @Override
                     public Collection<ErminAbstractProcess> visit(final TopDefinitions p,
                             TypeResolver arg) {
-                        return filterAbstractProcessDef(p.listdef_.stream()).map(
-                                abstractProcessDef -> toErminAbstractProcess(
-                                        abstractProcessDef)).collect(Collectors.toList());
+                        return filterAbstractProcessDef(p.listdef_.stream())
+                                .map(abstractProcessDef -> toErminAbstractProcess(
+                                        abstractProcessDef))
+                                .collect(Collectors.toList());
                     }
                 }, typeResolver);
 
@@ -179,9 +180,10 @@ public class FrontEndProcessor {
             throw new RuntimeException();
         }
 
-        List<ErminAttribute> attributes = entityDef.listattribute_.stream().map(
-                attribute -> attribute.accept(absynAttributeToErminAttribute,
-                        typeResolver)).collect(Collectors.toList());
+        List<ErminAttribute> attributes = entityDef.listattribute_
+                .stream().map(attribute -> attribute
+                        .accept(absynAttributeToErminAttribute, typeResolver))
+                .collect(Collectors.toList());
 
         return new ErminEntity(entityName, identifierKey, entityKeys, attributes);
     }
@@ -190,8 +192,8 @@ public class FrontEndProcessor {
         ErminName name = ErminName.fromSnake(relationshipDef.ident_);
         List<ErminRelationshipExp> exps = relationshipDef.listrelationshiptype_.stream()
                 .map(this::toErminRelationshipExp).collect(Collectors.toList());
-        if (exps.size() >= 3 && exps.stream().anyMatch(exp -> exp
-                .getMultiplicity() != ErminMultiplicity.ZERO_OR_MORE)) {
+        if (exps.size() >= 3 && exps.stream().anyMatch(
+                exp -> exp.getMultiplicity() != ErminMultiplicity.ZERO_OR_MORE)) {
             throw new RuntimeException("multirelation cannot have multiplicity other than zero or more");
         }
         return new ErminRelationship(name, exps);
@@ -199,8 +201,8 @@ public class FrontEndProcessor {
 
     public ErminRelationshipExp toErminRelationshipExp(
             final RelationshipType relationshiptype_) {
-        return relationshiptype_.accept(
-                new RelationshipType.Visitor<ErminRelationshipExp, Void>() {
+        return relationshiptype_
+                .accept(new RelationshipType.Visitor<ErminRelationshipExp, Void>() {
 
                     @Override
                     public ErminRelationshipExp visit(OneRelationshipType p, Void arg) {
@@ -276,8 +278,8 @@ public class FrontEndProcessor {
         final ErminName name = ErminName.fromSnake(abstractProcessDef.ident_);
 
         final List<ErminArgument> arguments = abstractProcessDef.listargument_.stream()
-                .map(argument -> argument.accept(
-                        new Argument.Visitor<ErminArgument, Void>() {
+                .map(argument -> argument
+                        .accept(new Argument.Visitor<ErminArgument, Void>() {
 
                             @Override
                             public ErminArgument visit(NewEntityArgument p, Void arg) {
@@ -291,32 +293,34 @@ public class FrontEndProcessor {
                                 return new ErminExistingEntityArgument(p.ident_1, ErminName
                                         .fromSnake(p.ident_2));
                             }
-                        }, null)).collect(Collectors.toList());
+                        }, null))
+                .collect(Collectors.toList());
 
         final List<ErminStatement> statements = abstractProcessDef.liststatement_.stream()
-                .map(statement -> statement.accept(
-                        new Statement.Visitor<ErminStatement, Void>() {
+                .map(statement -> statement
+                        .accept(new Statement.Visitor<ErminStatement, Void>() {
 
                             @Override
                             public ErminStatement visit(InsertStatement p, Void arg) {
-                                return new ErminInsertStatement(ErminName.fromSnake(
-                                        p.ident_), toErminExp(p.exp_));
+                                return new ErminInsertStatement(ErminName
+                                        .fromSnake(p.ident_), toErminExp(p.exp_));
                             }
 
                             @Override
                             public ErminStatement visit(DeleteStatement p, Void arg) {
-                                return new ErminDeleteStatement(ErminName.fromSnake(
-                                        p.ident_), toErminExp(p.exp_));
+                                return new ErminDeleteStatement(ErminName
+                                        .fromSnake(p.ident_), toErminExp(p.exp_));
                             }
 
                             @Override
                             public ErminStatement visit(UpdateStatement p, Void arg) {
-                                return new ErminUpdateStatement(ErminName.fromSnake(
-                                        p.ident_), p.listexp_.stream().map(
-                                                exp -> toErminExp(exp)).collect(Collectors
-                                                        .toList()));
+                                return new ErminUpdateStatement(ErminName
+                                        .fromSnake(p.ident_), p.listexp_.stream()
+                                                .map(exp -> toErminExp(exp))
+                                                .collect(Collectors.toList()));
                             }
-                        }, null)).collect(Collectors.toList());
+                        }, null))
+                .collect(Collectors.toList());
 
         return new ErminAbstractProcess(name, arguments, statements);
     }
@@ -332,8 +336,8 @@ public class FrontEndProcessor {
     }
 
     public Stream<EntityDef> filterEntityDef(final Stream<Def> defs) {
-        return defs.flatMap((Def def) -> def.accept(
-                new Def.Visitor<Stream<EntityDef>, Void>() {
+        return defs.flatMap(
+                (Def def) -> def.accept(new Def.Visitor<Stream<EntityDef>, Void>() {
 
                     @Override
                     public Stream<EntityDef> visit(TypeDef p, Void arg) {
@@ -374,8 +378,8 @@ public class FrontEndProcessor {
     }
 
     public Stream<RelationshipDef> filterRelationshipDef(final Stream<Def> defs) {
-        return defs.flatMap((Def def) -> def.accept(
-                new Def.Visitor<Stream<RelationshipDef>, Void>() {
+        return defs.flatMap(
+                (Def def) -> def.accept(new Def.Visitor<Stream<RelationshipDef>, Void>() {
 
                     @Override
                     public Stream<RelationshipDef> visit(TypeDef p, Void arg) {
@@ -415,8 +419,8 @@ public class FrontEndProcessor {
     }
 
     public Stream<AbstractProcessDef> filterAbstractProcessDef(final Stream<Def> defs) {
-        return defs.flatMap((Def def) -> def.accept(
-                new Def.Visitor<Stream<AbstractProcessDef>, Void>() {
+        return defs.flatMap((Def def) -> def
+                .accept(new Def.Visitor<Stream<AbstractProcessDef>, Void>() {
 
                     @Override
                     public Stream<AbstractProcessDef> visit(TypeDef p, Void arg) {

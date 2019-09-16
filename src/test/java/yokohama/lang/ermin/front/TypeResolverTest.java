@@ -37,20 +37,20 @@ public class TypeResolverTest {
         CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
         TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top, codeResolver);
 
-        Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)), typeResolver.resolve(
-                ErminName.fromSnake("rate")));
-        Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)), typeResolver.resolve(
-                ErminName.fromSnake("exchange_rate")));
-        Assert.assertEquals(Optional.of(new ErminVarCharType(40)), typeResolver.resolve(
-                ErminName.fromSnake("name")));
-        Assert.assertEquals(Optional.of(new ErminVarCharType(40)), typeResolver.resolve(
-                ErminName.fromSnake("product_name")));
-        Assert.assertEquals(Optional.of(new ErminIntegerType()), typeResolver.resolve(
-                ErminName.fromSnake("id")));
-        Assert.assertEquals(Optional.of(new ErminIntegerType()), typeResolver.resolve(
-                ErminName.fromSnake("person_id")));
-        Assert.assertEquals(Optional.of(new ErminIntegerType()), typeResolver.resolve(
-                ErminName.fromSnake("employee_id")));
+        Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)),
+                typeResolver.resolve(ErminName.fromSnake("rate")));
+        Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)),
+                typeResolver.resolve(ErminName.fromSnake("exchange_rate")));
+        Assert.assertEquals(Optional.of(new ErminVarCharType(40)),
+                typeResolver.resolve(ErminName.fromSnake("name")));
+        Assert.assertEquals(Optional.of(new ErminVarCharType(40)),
+                typeResolver.resolve(ErminName.fromSnake("product_name")));
+        Assert.assertEquals(Optional.of(new ErminIntegerType()),
+                typeResolver.resolve(ErminName.fromSnake("id")));
+        Assert.assertEquals(Optional.of(new ErminIntegerType()),
+                typeResolver.resolve(ErminName.fromSnake("person_id")));
+        Assert.assertEquals(Optional.of(new ErminIntegerType()),
+                typeResolver.resolve(ErminName.fromSnake("employee_id")));
     }
 
     @Test(expected = RuntimeException.class)

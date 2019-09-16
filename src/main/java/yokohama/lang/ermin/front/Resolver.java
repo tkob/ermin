@@ -8,8 +8,8 @@ public interface Resolver<K, V> {
     Optional<V> resolve(K name);
 
     default V resolveOrThrow(K name) {
-        return resolve(name).orElseThrow(() -> new NoSuchElementException(name
-                + " not found"));
+        return resolve(name)
+                .orElseThrow(() -> new NoSuchElementException(name + " not found"));
     }
 
     default boolean hasName(K name) {
