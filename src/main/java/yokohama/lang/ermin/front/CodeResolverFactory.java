@@ -50,15 +50,17 @@ public class CodeResolverFactory {
 
         Map<ErminName, Iterable<String>> nameToValues = new HashMap<>();
         codeDefs.forEach(codeDef -> {
-            nameToValues.put(ErminName.fromSnake(codeDef.ident_), codeDef.listcode_
-                    .stream().map(code -> code.accept(new Code.Visitor<String, Void>() {
+            nameToValues.put(ErminName.fromSnake(codeDef.ident_),
+                             codeDef.listcode_.stream()
+                                              .map(code -> code.accept(new Code.Visitor<String, Void>() {
 
-                        @Override
-                        public String visit(StringCode p, Void arg) {
-                            return p.string_;
-                        }
+                                                  @Override
+                                                  public String visit(StringCode p, Void arg) {
+                                                      return p.string_;
+                                                  }
 
-                    }, null)).collect(Collectors.toList()));
+                                              }, null))
+                                              .collect(Collectors.toList()));
         });
 
         return new CodeResolver() {
@@ -75,8 +77,7 @@ public class CodeResolverFactory {
 
             @Override
             public int maxLength(ErminName name) {
-                Stream<String> codes = StreamSupport
-                        .stream(this.resolveOrThrow(name).spliterator(), false);
+                Stream<String> codes = StreamSupport.stream(this.resolveOrThrow(name).spliterator(), false);
                 return codes.max(new Comparator<String>() {
                     @Override
                     public int compare(String code1, String code2) {
@@ -89,44 +90,43 @@ public class CodeResolverFactory {
     }
 
     public Stream<CodeDef> filterCodeDef(final Stream<Def> defs) {
-        return defs.flatMap(
-                (Def def) -> def.accept(new Def.Visitor<Stream<CodeDef>, Void>() {
+        return defs.flatMap((Def def) -> def.accept(new Def.Visitor<Stream<CodeDef>, Void>() {
 
-                    @Override
-                    public Stream<CodeDef> visit(TypeDef p, Void arg) {
-                        return Stream.<CodeDef> empty();
-                    }
+            @Override
+            public Stream<CodeDef> visit(TypeDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
 
-                    @Override
-                    public Stream<CodeDef> visit(CodeDef p, Void arg) {
-                        return Stream.of(p);
-                    }
+            @Override
+            public Stream<CodeDef> visit(CodeDef p, Void arg) {
+                return Stream.of(p);
+            }
 
-                    @Override
-                    public Stream<CodeDef> visit(IdentifierDef p, Void arg) {
-                        return Stream.<CodeDef> empty();
-                    }
+            @Override
+            public Stream<CodeDef> visit(IdentifierDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
 
-                    @Override
-                    public Stream<CodeDef> visit(EntityDef p, Void arg) {
-                        return Stream.<CodeDef> empty();
-                    }
+            @Override
+            public Stream<CodeDef> visit(EntityDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
 
-                    @Override
-                    public Stream<CodeDef> visit(KeyOnlyEntityDef p, Void arg) {
-                        return Stream.<CodeDef> empty();
-                    }
+            @Override
+            public Stream<CodeDef> visit(KeyOnlyEntityDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
 
-                    @Override
-                    public Stream<CodeDef> visit(RelationshipDef p, Void arg) {
-                        return Stream.<CodeDef> empty();
-                    }
+            @Override
+            public Stream<CodeDef> visit(RelationshipDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
 
-                    @Override
-                    public Stream<CodeDef> visit(AbstractProcessDef p, Void arg) {
-                        return Stream.<CodeDef> empty();
-                    }
-                }, null));
+            @Override
+            public Stream<CodeDef> visit(AbstractProcessDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
+        }, null));
     }
 
 }

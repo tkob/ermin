@@ -13,8 +13,7 @@ public class ErminRelationship {
 
     private final List<ErminRelationshipExp> exps;
 
-    public <R> Optional<R> applyBiFunction(
-            BiFunction<ErminRelationshipExp, ErminRelationshipExp, R> f) {
+    public <R> Optional<R> applyBiFunction(BiFunction<ErminRelationshipExp, ErminRelationshipExp, R> f) {
         if (exps.size() == 2) {
             return Optional.ofNullable(f.apply(exps.get(0), exps.get(1)));
         } else {

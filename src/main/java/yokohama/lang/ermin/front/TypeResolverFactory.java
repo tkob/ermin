@@ -55,8 +55,7 @@ public class TypeResolverFactory {
         }, codeResolver);
     }
 
-    public TypeResolver fromTypeDefs(Iterable<TypeDef> typeDefs,
-            CodeResolver codeResolver) {
+    public TypeResolver fromTypeDefs(Iterable<TypeDef> typeDefs, CodeResolver codeResolver) {
         Set<ErminName> typeNames = new HashSet<>();
         codeResolver.getNames().forEach(name -> {
             if (typeNames.contains(name)) {
@@ -122,8 +121,7 @@ public class TypeResolverFactory {
 
                 @Override
                 public Void visit(DecimalPrecisionScaleType p, TypeDef typeDef) {
-                    nameToType.put(typeName,
-                            new ErminDecimalType(p.integer_1, p.integer_2));
+                    nameToType.put(typeName, new ErminDecimalType(p.integer_1, p.integer_2));
                     return null;
                 }
 
@@ -163,8 +161,7 @@ public class TypeResolverFactory {
                     break;
                 } else if (nameToName.containsKey(toName)) {
                     if (seen.contains(toName)) {
-                        throw new RuntimeException("cyclic type definition beginning from "
-                                + fromName);
+                        throw new RuntimeException("cyclic type definition beginning from " + fromName);
                     }
                     seen.add(toName);
                     toName = nameToName.get(toName);
@@ -188,44 +185,43 @@ public class TypeResolverFactory {
     }
 
     public Stream<TypeDef> filterTypeDef(final Stream<Def> defs) {
-        return defs.flatMap(
-                (Def def) -> def.accept(new Def.Visitor<Stream<TypeDef>, Void>() {
+        return defs.flatMap((Def def) -> def.accept(new Def.Visitor<Stream<TypeDef>, Void>() {
 
-                    @Override
-                    public Stream<TypeDef> visit(TypeDef p, Void arg) {
-                        return Stream.of(p);
-                    }
+            @Override
+            public Stream<TypeDef> visit(TypeDef p, Void arg) {
+                return Stream.of(p);
+            }
 
-                    @Override
-                    public Stream<TypeDef> visit(CodeDef p, Void arg) {
-                        return Stream.<TypeDef> empty();
-                    }
+            @Override
+            public Stream<TypeDef> visit(CodeDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
 
-                    @Override
-                    public Stream<TypeDef> visit(IdentifierDef p, Void arg) {
-                        return Stream.<TypeDef> empty();
-                    }
+            @Override
+            public Stream<TypeDef> visit(IdentifierDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
 
-                    @Override
-                    public Stream<TypeDef> visit(EntityDef p, Void arg) {
-                        return Stream.<TypeDef> empty();
-                    }
+            @Override
+            public Stream<TypeDef> visit(EntityDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
 
-                    @Override
-                    public Stream<TypeDef> visit(KeyOnlyEntityDef p, Void arg) {
-                        return Stream.<TypeDef> empty();
-                    }
+            @Override
+            public Stream<TypeDef> visit(KeyOnlyEntityDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
 
-                    @Override
-                    public Stream<TypeDef> visit(RelationshipDef p, Void arg) {
-                        return Stream.<TypeDef> empty();
-                    }
+            @Override
+            public Stream<TypeDef> visit(RelationshipDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
 
-                    @Override
-                    public Stream<TypeDef> visit(AbstractProcessDef p, Void arg) {
-                        return Stream.<TypeDef> empty();
-                    }
-                }, null));
+            @Override
+            public Stream<TypeDef> visit(AbstractProcessDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
+        }, null));
     }
 
 }

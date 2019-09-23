@@ -36,33 +36,35 @@ public class ReladomoTranslator {
 
         // Entities to MithraObjects.
         erminTuple.getEntities().forEach(entity -> {
-            mithraObjects.put(entity.getName(), entityToMithraObject(entity,
-                    erminTuple.getEntityResolver(), erminTuple.getCodeResolver()));
+            mithraObjects.put(entity.getName(),
+                              entityToMithraObject(entity,
+                                                   erminTuple.getEntityResolver(),
+                                                   erminTuple.getCodeResolver()));
         });
 
         // Relations to MithraObjects. Possibly modifies existing entities.
         erminTuple.getRelationships().forEach(relationship -> {
-            relationshipToMithraObject(relationship, erminTuple.getEntityResolver(),
-                    erminTuple.getCodeResolver(), mithraObjects);
+            relationshipToMithraObject(relationship,
+                                       erminTuple.getEntityResolver(),
+                                       erminTuple.getCodeResolver(),
+                                       mithraObjects);
         });
 
         // Codes to MithraObjects
         erminTuple.getCodeResolver().getNames().forEach(name -> {
-            mithraObjects.put(name,
-                    codeToMithraObject(name, erminTuple.getCodeResolver()));
+            mithraObjects.put(name, codeToMithraObject(name, erminTuple.getCodeResolver()));
         });
 
         return mithraObjects.values();
     }
 
     void accumulatePrimaryKeys(final ErminEntity entity,
-            final Resolver<ErminName, ErminEntity> entityResolver,
-            final CodeResolver codeResolver, final List<AttributeType> attributes) {
+            final Resolver<ErminName, ErminEntity> entityResolver, final CodeResolver codeResolver,
+            final List<AttributeType> attributes) {
 
         entity.getEntityKeys().forEach(entityKey -> {
             entityResolver.resolve(entityKey).ifPresent(keyEntity -> {
-                accumulatePrimaryKeys(keyEntity, entityResolver, codeResolver,
-                        attributes);
+                accumulatePrimaryKeys(keyEntity, entityResolver, codeResolver, attributes);
             });
         });
         entity.getTypeKey().ifPresent(typeKey -> {
@@ -70,15 +72,13 @@ public class ReladomoTranslator {
             attributeType.setName(typeKey.getName().toLowerCamel());
             attributeType.setColumnName(typeKey.getName().toSnake());
             attributeType.setPrimaryKey(true);
-            typeKey.getType()
-                    .accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
+            typeKey.getType().accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
             attributes.add(attributeType);
         });
     }
 
     MithraObjectType entityToMithraObject(final ErminEntity entity,
-            final Resolver<ErminName, ErminEntity> entityResolver,
-            final CodeResolver codeResolver) {
+            final Resolver<ErminName, ErminEntity> entityResolver, final CodeResolver codeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
         mithraObject.setObjectType(ObjectType.TRANSACTIONAL);
@@ -90,9 +90,10 @@ public class ReladomoTranslator {
         accumulatePrimaryKeys(entity, entityResolver, codeResolver, attributes);
 
         // add non-key attributes
-        attributes.addAll(entity.getAttributes().stream()
-                .map(attribute -> toAttribute(attribute, codeResolver))
-                .collect(Collectors.toList()));
+        attributes.addAll(entity.getAttributes()
+                                .stream()
+                                .map(attribute -> toAttribute(attribute, codeResolver))
+                                .collect(Collectors.toList()));
 
         return mithraObject;
     }
@@ -110,18 +111,16 @@ public class ReladomoTranslator {
                 attributeType.setNullable(true);
         }
         attributeType.setPrimaryKey(false);
-        attribute.getType()
-                .accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
+        attribute.getType().accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
 
         return attributeType;
     }
 
     void relationshipToMithraObject(ErminRelationship relationship,
-            final Resolver<ErminName, ErminEntity> entityResolver,
-            final CodeResolver codeResolver,
+            final Resolver<ErminName, ErminEntity> entityResolver, final CodeResolver codeResolver,
             Map<ErminName, MithraObjectType> mithraObjects) {
-        final Iterable<ErminName> exps = relationship.getExps().stream()
-                .map(exp -> exp.getName()).collect(Collectors.toList());
+        final Iterable<ErminName> exps =
+            relationship.getExps().stream().map(exp -> exp.getName()).collect(Collectors.toList());
 
         final MithraObjectType mithraObject = factory.createMithraObjectType();
         mithraObject.setObjectType(ObjectType.TRANSACTIONAL);
@@ -132,57 +131,59 @@ public class ReladomoTranslator {
         final List<AttributeType> attributes = mithraObject.getAttribute();
         final List<RelationshipType> relationshipTypes = mithraObject.getRelationship();
         for (final ErminName name : exps) {
-            List<AttributeType> primaryKeys = mithraObjects.get(name).getAttribute()
-                    .stream().filter(AttributePureType::isPrimaryKey)
-                    .collect(Collectors.toList());
+            List<AttributeType> primaryKeys = mithraObjects.get(name)
+                                                           .getAttribute()
+                                                           .stream()
+                                                           .filter(AttributePureType::isPrimaryKey)
+                                                           .collect(Collectors.toList());
             attributes.addAll(primaryKeys);
 
             RelationshipType relationshipType = factory.createRelationshipType();
             relationshipType.setCardinality(CardinalityType.MANY_TO_ONE);
             relationshipType.setName(name.toLowerCamel());
             relationshipType.setRelatedObject(name.toUpperCamel());
-            relationshipType.setValue(primaryKeys
-                    .stream().map(attr -> "this." + attr.getName() + " = "
-                            + name.toUpperCamel() + "." + attr.getName())
-                    .collect(Collectors.joining(" and ")));
+            relationshipType.setValue(primaryKeys.stream()
+                                                 .map(attr -> "this." + attr.getName() + " = "
+                                                         + name.toUpperCamel() + "." + attr.getName())
+                                                 .collect(Collectors.joining(" and ")));
             relationshipTypes.add(relationshipType);
         }
 
         mithraObjects.put(relationship.getName(), mithraObject);
 
         // Add Relationship elements to existing entities if the arity is 2.
-        relationship.applyBiFunction(
-                (ErminRelationshipExp left, ErminRelationshipExp right) -> {
-                    final List<RelationshipType> relationships = mithraObjects
-                            .get(left.getName()).getRelationship();
-                    RelationshipType relationshipType = factory.createRelationshipType();
-                    relationshipType.setName(relationship.getName().toLowerCamel());
-                    relationshipType.setRelatedObject(right.getName().toUpperCamel());
-                    relationshipType.setCardinality(CardinalityType.fromValue(
-                            translateMultiplicity(left.getMultiplicity()) + "-to-"
-                                    + translateMultiplicity(right.getMultiplicity())));
+        relationship.applyBiFunction((ErminRelationshipExp left, ErminRelationshipExp right) -> {
+            final List<RelationshipType> relationships = mithraObjects.get(left.getName()).getRelationship();
+            RelationshipType relationshipType = factory.createRelationshipType();
+            relationshipType.setName(relationship.getName().toLowerCamel());
+            relationshipType.setRelatedObject(right.getName().toUpperCamel());
+            relationshipType.setCardinality(CardinalityType.fromValue(translateMultiplicity(left.getMultiplicity())
+                    + "-to-" + translateMultiplicity(right.getMultiplicity())));
 
-                    List<AttributeType> leftPrimaryKeys = new ArrayList<>();
-                    List<AttributeType> rightPrimaryKeys = new ArrayList<>();
-                    accumulatePrimaryKeys(entityResolver.resolveOrThrow(left.getName()),
-                            entityResolver, codeResolver, leftPrimaryKeys);
-                    accumulatePrimaryKeys(entityResolver.resolveOrThrow(right.getName()),
-                            entityResolver, codeResolver, rightPrimaryKeys);
-                    Stream<String> ls = leftPrimaryKeys.stream()
-                            .map(attribute -> "this." + attribute.getName() + " = "
-                                    + relationship.getName().toUpperCamel() + "."
-                                    + attribute.getName());
-                    Stream<String> rs = rightPrimaryKeys.stream()
-                            .map(attribute -> right.getName().toUpperCamel() + "."
-                                    + attribute.getName() + " = "
-                                    + relationship.getName().toUpperCamel() + "."
-                                    + attribute.getName());
-                    relationshipType.setValue(
-                            Stream.concat(ls, rs).collect(Collectors.joining(" and ")));
+            List<AttributeType> leftPrimaryKeys = new ArrayList<>();
+            List<AttributeType> rightPrimaryKeys = new ArrayList<>();
+            accumulatePrimaryKeys(entityResolver.resolveOrThrow(left.getName()),
+                                  entityResolver,
+                                  codeResolver,
+                                  leftPrimaryKeys);
+            accumulatePrimaryKeys(entityResolver.resolveOrThrow(right.getName()),
+                                  entityResolver,
+                                  codeResolver,
+                                  rightPrimaryKeys);
+            Stream<String> ls = leftPrimaryKeys.stream()
+                                               .map(attribute -> "this." + attribute.getName() + " = "
+                                                       + relationship.getName().toUpperCamel() + "."
+                                                       + attribute.getName());
+            Stream<String> rs =
+                rightPrimaryKeys.stream()
+                                .map(attribute -> right.getName().toUpperCamel() + "." + attribute.getName()
+                                        + " = " + relationship.getName().toUpperCamel() + "."
+                                        + attribute.getName());
+            relationshipType.setValue(Stream.concat(ls, rs).collect(Collectors.joining(" and ")));
 
-                    relationships.add(relationshipType);
-                    return null;
-                });
+            relationships.add(relationshipType);
+            return null;
+        });
 
     }
 

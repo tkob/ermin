@@ -24,8 +24,7 @@ public class TypeResolverTest {
     TypeResolverFactory typeResolverFactory = new TypeResolverFactory();
 
     private Top parse(String path) throws Exception {
-        final Yylex l = new Yylex(new InputStreamReader(this.getClass()
-                .getResourceAsStream(path)));
+        final Yylex l = new Yylex(new InputStreamReader(this.getClass().getResourceAsStream(path)));
         final parser p = new parser(l);
 
         return p.pTop();
@@ -38,19 +37,19 @@ public class TypeResolverTest {
         TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top, codeResolver);
 
         Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)),
-                typeResolver.resolve(ErminName.fromSnake("rate")));
+                            typeResolver.resolve(ErminName.fromSnake("rate")));
         Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)),
-                typeResolver.resolve(ErminName.fromSnake("exchange_rate")));
+                            typeResolver.resolve(ErminName.fromSnake("exchange_rate")));
         Assert.assertEquals(Optional.of(new ErminVarCharType(40)),
-                typeResolver.resolve(ErminName.fromSnake("name")));
+                            typeResolver.resolve(ErminName.fromSnake("name")));
         Assert.assertEquals(Optional.of(new ErminVarCharType(40)),
-                typeResolver.resolve(ErminName.fromSnake("product_name")));
+                            typeResolver.resolve(ErminName.fromSnake("product_name")));
         Assert.assertEquals(Optional.of(new ErminIntegerType()),
-                typeResolver.resolve(ErminName.fromSnake("id")));
+                            typeResolver.resolve(ErminName.fromSnake("id")));
         Assert.assertEquals(Optional.of(new ErminIntegerType()),
-                typeResolver.resolve(ErminName.fromSnake("person_id")));
+                            typeResolver.resolve(ErminName.fromSnake("person_id")));
         Assert.assertEquals(Optional.of(new ErminIntegerType()),
-                typeResolver.resolve(ErminName.fromSnake("employee_id")));
+                            typeResolver.resolve(ErminName.fromSnake("employee_id")));
     }
 
     @Test(expected = RuntimeException.class)

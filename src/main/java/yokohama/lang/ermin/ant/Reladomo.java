@@ -48,22 +48,19 @@ public class Reladomo extends Task {
         }
 
         try {
-            final ErminTuple erminTuple = frontEndProcessor
-                    .process(new FileInputStream(source));
+            final ErminTuple erminTuple = frontEndProcessor.process(new FileInputStream(source));
 
-            final Iterable<MithraObjectType> mithraObjects = reladomoTranslator
-                    .toMithraObjects(erminTuple);
+            final Iterable<MithraObjectType> mithraObjects = reladomoTranslator.toMithraObjects(erminTuple);
 
             // Create the Reladomo object XML files
             {
-                final JAXBContext context = JAXBContext
-                        .newInstance(MithraObjectType.class);
+                final JAXBContext context = JAXBContext.newInstance(MithraObjectType.class);
                 final Marshaller marshaller = context.createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 for (final MithraObjectType mithraObject : mithraObjects) {
-                    try (final OutputStream os = new FileOutputStream(new File(destination, mithraObject
-                            .getClassName() + ".xml"))) {
+                    try (final OutputStream os =
+                        new FileOutputStream(new File(destination, mithraObject.getClassName() + ".xml"))) {
                         marshaller.marshal(factory.createMithraObject(mithraObject), os);
                     }
                 }
@@ -76,11 +73,10 @@ public class Reladomo extends Task {
                 marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 final MithraType mithra = factory.createMithraType();
-                final List<MithraObjectResourceType> mithraObjectResources = mithra
-                        .getMithraObjectResource();
+                final List<MithraObjectResourceType> mithraObjectResources = mithra.getMithraObjectResource();
                 for (final MithraObjectType mithraObject : mithraObjects) {
-                    final MithraObjectResourceType mithraObjectResource = factory
-                            .createMithraObjectResourceType();
+                    final MithraObjectResourceType mithraObjectResource =
+                        factory.createMithraObjectResourceType();
                     mithraObjectResource.setName(mithraObject.getClassName());
                     mithraObjectResources.add(mithraObjectResource);
                 }
