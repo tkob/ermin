@@ -54,7 +54,8 @@ DeleteStatement. Statement ::= Ident "-=" Exp ;
 UpdateStatement. Statement ::= Ident "~=" "<" [Exp] ">" ;
 separator nonempty Statement "" ;
 
-VarExp. Exp ::= Ident ;
+VarExp.   Exp ::= Ident ;
+TupleExp. Exp ::= "<" [Exp] ">" ;
 separator nonempty Exp "," ;
 
 comment "--" ;

@@ -39,6 +39,7 @@ import yokohama.lang.ermin.Absyn.RelationshipType;
 import yokohama.lang.ermin.Absyn.Statement;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.Absyn.TopDefinitions;
+import yokohama.lang.ermin.Absyn.TupleExp;
 import yokohama.lang.ermin.Absyn.TypeDef;
 import yokohama.lang.ermin.Absyn.UpdateStatement;
 import yokohama.lang.ermin.Absyn.VarExp;
@@ -56,6 +57,7 @@ import yokohama.lang.ermin.process.ErminExp;
 import yokohama.lang.ermin.process.ErminInsertStatement;
 import yokohama.lang.ermin.process.ErminNewEntityArgument;
 import yokohama.lang.ermin.process.ErminStatement;
+import yokohama.lang.ermin.process.ErminTupleExp;
 import yokohama.lang.ermin.process.ErminUpdateStatement;
 import yokohama.lang.ermin.process.ErminVarExp;
 import yokohama.lang.ermin.relationship.ErminMultiplicity;
@@ -318,6 +320,14 @@ public class FrontEndProcessor {
             public ErminExp visit(VarExp p, Void arg) {
                 return new ErminVarExp(p.ident_);
             }
+
+            @Override
+            public ErminExp visit(TupleExp p, Void arg) {
+                return new ErminTupleExp(p.listexp_.stream().map(exp -> {
+                    return toErminExp(exp);
+                }).collect(Collectors.toList()));
+            }
+
         }, null);
     }
 
