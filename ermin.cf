@@ -39,7 +39,6 @@ separator nonempty RelationshipType "*" ;
 StringCode. Code ::= String ;
 terminator nonempty Code "" ;
 
--- KeyAttribute.       Attribute ::= "key" Ident ":" Type ;
 MandatoryAttribute. Attribute ::= "attribute" Ident ":" Type ;
 OptionalAttribute.  Attribute ::= "optional" Ident ":" Type ;
 UniqueAttribute.    Attribute ::= "unique" Ident ":" Type ;
