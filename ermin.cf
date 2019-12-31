@@ -58,5 +58,5 @@ TupleExp. Exp ::= "<" [Exp] ">" ;
 separator nonempty Exp "," ;
 
 comment "--" ;
-comment "{--" "--}" ;
+comment "{-" "-}" ;
 
