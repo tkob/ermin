@@ -49,14 +49,14 @@ public class TypeResolverFactory {
 
             @Override
             public TypeResolver visit(TopDefinitions p, CodeResolver codeResolver) {
-                Stream<TypeDef> typeDefs = filterTypeDef(p.listdef_.stream());
+                final Stream<TypeDef> typeDefs = filterTypeDef(p.listdef_.stream());
                 return fromTypeDefs(typeDefs.collect(Collectors.toList()), codeResolver);
             }
         }, codeResolver);
     }
 
     public TypeResolver fromTypeDefs(Iterable<TypeDef> typeDefs, CodeResolver codeResolver) {
-        Set<ErminName> typeNames = new HashSet<>();
+        final Set<ErminName> typeNames = new HashSet<>();
         codeResolver.getNames().forEach(name -> {
             if (typeNames.contains(name)) {
                 throw new RuntimeException("duplicate code definition: " + name);
@@ -65,7 +65,7 @@ public class TypeResolverFactory {
             }
         });
         typeDefs.forEach(typeDef -> {
-            ErminName typeName = ErminName.fromSnake(typeDef.ident_);
+            final ErminName typeName = ErminName.fromSnake(typeDef.ident_);
             if (typeNames.contains(typeName)) {
                 throw new RuntimeException("duplicate type/code definition: " + typeName);
             } else {
@@ -73,14 +73,14 @@ public class TypeResolverFactory {
             }
         });
 
-        Map<ErminName, ErminType> nameToType = new HashMap<>();
-        Map<ErminName, ErminName> nameToName = new HashMap<>();
+        final Map<ErminName, ErminType> nameToType = new HashMap<>();
+        final Map<ErminName, ErminName> nameToName = new HashMap<>();
 
         codeResolver.getNames().forEach(name -> {
             nameToType.put(name, new ErminStringCodeType(name));
         });
         typeDefs.forEach(typeDef -> {
-            ErminName typeName = ErminName.fromSnake(typeDef.ident_);
+            final ErminName typeName = ErminName.fromSnake(typeDef.ident_);
             typeDef.type_.accept(new Type.Visitor<Void, TypeDef>() {
 
                 @Override
@@ -139,7 +139,7 @@ public class TypeResolverFactory {
 
                 @Override
                 public Void visit(IdentType p, TypeDef typeDef) {
-                    ErminName name = ErminName.fromSnake(p.ident_);
+                    final ErminName name = ErminName.fromSnake(p.ident_);
                     if (codeResolver.hasName(name)) {
                         nameToType.put(typeName, new ErminStringCodeType(name));
                     } else {
@@ -151,7 +151,7 @@ public class TypeResolverFactory {
             }, typeDef);
         });
 
-        for (final ErminName fromName : nameToName.keySet()) {
+        for (ErminName fromName : nameToName.keySet()) {
             ErminName toName = nameToName.get(fromName);
             final Set<ErminName> seen = new HashSet<>();
             seen.add(fromName);
@@ -184,7 +184,7 @@ public class TypeResolverFactory {
 
     }
 
-    public Stream<TypeDef> filterTypeDef(final Stream<Def> defs) {
+    public Stream<TypeDef> filterTypeDef(Stream<Def> defs) {
         return defs.flatMap((Def def) -> def.accept(new Def.Visitor<Stream<TypeDef>, Void>() {
 
             @Override

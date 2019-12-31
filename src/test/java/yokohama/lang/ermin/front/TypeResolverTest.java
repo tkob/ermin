@@ -10,10 +10,6 @@ import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
 import yokohama.lang.ermin.Absyn.Top;
 import yokohama.lang.ermin.attribute.ErminName;
-import yokohama.lang.ermin.front.CodeResolver;
-import yokohama.lang.ermin.front.CodeResolverFactory;
-import yokohama.lang.ermin.front.TypeResolver;
-import yokohama.lang.ermin.front.TypeResolverFactory;
 import yokohama.lang.ermin.type.ErminDecimalType;
 import yokohama.lang.ermin.type.ErminIntegerType;
 import yokohama.lang.ermin.type.ErminVarCharType;
@@ -32,9 +28,9 @@ public class TypeResolverTest {
 
     @Test
     public void testNormal() throws Exception {
-        Top top = parse("TypeResolverTest_normal.ermin");
-        CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
-        TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top, codeResolver);
+        final Top top = parse("TypeResolverTest_normal.ermin");
+        final CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
+        final TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top, codeResolver);
 
         Assert.assertEquals(Optional.of(new ErminDecimalType(9, 2)),
                             typeResolver.resolve(ErminName.fromSnake("rate")));
@@ -54,23 +50,23 @@ public class TypeResolverTest {
 
     @Test(expected = RuntimeException.class)
     public void testDuplicate() throws Exception {
-        Top top = parse("TypeResolverTest_dupulicate.ermin");
-        CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
+        final Top top = parse("TypeResolverTest_dupulicate.ermin");
+        final CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
         typeResolverFactory.fromAbsyn(top, codeResolver);
     }
 
     @Test(expected = RuntimeException.class)
     public void testCycle1() throws Exception {
-        Top top = parse("TypeResolverTest_cycle1.ermin");
-        CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
+        final Top top = parse("TypeResolverTest_cycle1.ermin");
+        final CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
 
         typeResolverFactory.fromAbsyn(top, codeResolver);
     }
 
     @Test(expected = RuntimeException.class)
     public void testCycle2() throws Exception {
-        Top top = parse("TypeResolverTest_cycle2.ermin");
-        CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
+        final Top top = parse("TypeResolverTest_cycle2.ermin");
+        final CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
         typeResolverFactory.fromAbsyn(top, codeResolver);
     }
 

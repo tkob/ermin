@@ -31,7 +31,7 @@ public class ReladomoTranslator {
 
     ObjectFactory factory = new ObjectFactory();
 
-    public Iterable<MithraObjectType> toMithraObjects(final ErminTuple erminTuple) {
+    public Iterable<MithraObjectType> toMithraObjects(ErminTuple erminTuple) {
         final Map<ErminName, MithraObjectType> mithraObjects = new HashMap<>();
 
         // Entities to MithraObjects.
@@ -58,9 +58,8 @@ public class ReladomoTranslator {
         return mithraObjects.values();
     }
 
-    void accumulatePrimaryKeys(final ErminEntity entity,
-            final Resolver<ErminName, ErminEntity> entityResolver, final CodeResolver codeResolver,
-            final List<AttributeType> attributes) {
+    void accumulatePrimaryKeys(ErminEntity entity, Resolver<ErminName, ErminEntity> entityResolver,
+            CodeResolver codeResolver, List<AttributeType> attributes) {
 
         entity.getEntityKeys().forEach(entityKey -> {
             entityResolver.resolve(entityKey).ifPresent(keyEntity -> {
@@ -77,8 +76,8 @@ public class ReladomoTranslator {
         });
     }
 
-    MithraObjectType entityToMithraObject(final ErminEntity entity,
-            final Resolver<ErminName, ErminEntity> entityResolver, final CodeResolver codeResolver) {
+    MithraObjectType entityToMithraObject(ErminEntity entity, Resolver<ErminName, ErminEntity> entityResolver,
+            CodeResolver codeResolver) {
         final MithraObjectType mithraObject = factory.createMithraObjectType();
 
         mithraObject.setObjectType(ObjectType.TRANSACTIONAL);
@@ -98,7 +97,7 @@ public class ReladomoTranslator {
         return mithraObject;
     }
 
-    AttributeType toAttribute(ErminAttribute attribute, final CodeResolver codeResolver) {
+    AttributeType toAttribute(ErminAttribute attribute, CodeResolver codeResolver) {
         final AttributeType attributeType = factory.createAttributeType();
 
         attributeType.setName(attribute.getName().toLowerCamel());
@@ -107,8 +106,10 @@ public class ReladomoTranslator {
             case MANDATORY:
             case UNIQUE:
                 attributeType.setNullable(false);
+                break;
             case OPTIONAL:
                 attributeType.setNullable(true);
+                break;
         }
         attributeType.setPrimaryKey(false);
         attribute.getType().accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
@@ -117,7 +118,7 @@ public class ReladomoTranslator {
     }
 
     void relationshipToMithraObject(ErminRelationship relationship,
-            final Resolver<ErminName, ErminEntity> entityResolver, final CodeResolver codeResolver,
+            Resolver<ErminName, ErminEntity> entityResolver, CodeResolver codeResolver,
             Map<ErminName, MithraObjectType> mithraObjects) {
         final Iterable<ErminName> exps =
             relationship.getExps().stream().map(exp -> exp.getName()).collect(Collectors.toList());
@@ -130,15 +131,15 @@ public class ReladomoTranslator {
 
         final List<AttributeType> attributes = mithraObject.getAttribute();
         final List<RelationshipType> relationshipTypes = mithraObject.getRelationship();
-        for (final ErminName name : exps) {
-            List<AttributeType> primaryKeys = mithraObjects.get(name)
-                                                           .getAttribute()
-                                                           .stream()
-                                                           .filter(AttributePureType::isPrimaryKey)
-                                                           .collect(Collectors.toList());
+        for (ErminName name : exps) {
+            final List<AttributeType> primaryKeys = mithraObjects.get(name)
+                                                                 .getAttribute()
+                                                                 .stream()
+                                                                 .filter(AttributePureType::isPrimaryKey)
+                                                                 .collect(Collectors.toList());
             attributes.addAll(primaryKeys);
 
-            RelationshipType relationshipType = factory.createRelationshipType();
+            final RelationshipType relationshipType = factory.createRelationshipType();
             relationshipType.setCardinality(CardinalityType.MANY_TO_ONE);
             relationshipType.setName(name.toLowerCamel());
             relationshipType.setRelatedObject(name.toUpperCamel());
@@ -154,14 +155,14 @@ public class ReladomoTranslator {
         // Add Relationship elements to existing entities if the arity is 2.
         relationship.applyBiFunction((ErminRelationshipExp left, ErminRelationshipExp right) -> {
             final List<RelationshipType> relationships = mithraObjects.get(left.getName()).getRelationship();
-            RelationshipType relationshipType = factory.createRelationshipType();
+            final RelationshipType relationshipType = factory.createRelationshipType();
             relationshipType.setName(relationship.getName().toLowerCamel());
             relationshipType.setRelatedObject(right.getName().toUpperCamel());
             relationshipType.setCardinality(CardinalityType.fromValue(translateMultiplicity(left.getMultiplicity())
                     + "-to-" + translateMultiplicity(right.getMultiplicity())));
 
-            List<AttributeType> leftPrimaryKeys = new ArrayList<>();
-            List<AttributeType> rightPrimaryKeys = new ArrayList<>();
+            final List<AttributeType> leftPrimaryKeys = new ArrayList<>();
+            final List<AttributeType> rightPrimaryKeys = new ArrayList<>();
             accumulatePrimaryKeys(entityResolver.resolveOrThrow(left.getName()),
                                   entityResolver,
                                   codeResolver,
@@ -170,11 +171,11 @@ public class ReladomoTranslator {
                                   entityResolver,
                                   codeResolver,
                                   rightPrimaryKeys);
-            Stream<String> ls = leftPrimaryKeys.stream()
-                                               .map(attribute -> "this." + attribute.getName() + " = "
-                                                       + relationship.getName().toUpperCamel() + "."
-                                                       + attribute.getName());
-            Stream<String> rs =
+            final Stream<String> ls = leftPrimaryKeys.stream()
+                                                     .map(attribute -> "this." + attribute.getName() + " = "
+                                                             + relationship.getName().toUpperCamel() + "."
+                                                             + attribute.getName());
+            final Stream<String> rs =
                 rightPrimaryKeys.stream()
                                 .map(attribute -> right.getName().toUpperCamel() + "." + attribute.getName()
                                         + " = " + relationship.getName().toUpperCamel() + "."
@@ -187,7 +188,7 @@ public class ReladomoTranslator {
 
     }
 
-    String translateMultiplicity(final ErminMultiplicity multiplicity) {
+    String translateMultiplicity(ErminMultiplicity multiplicity) {
         switch (multiplicity) {
             case ONE:
             case ZERO_OR_ONE:

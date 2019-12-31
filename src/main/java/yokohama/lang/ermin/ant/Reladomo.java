@@ -58,8 +58,8 @@ public class Reladomo extends Task {
                 final Marshaller marshaller = context.createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-                for (final MithraObjectType mithraObject : mithraObjects) {
-                    try (final OutputStream os =
+                for (MithraObjectType mithraObject : mithraObjects) {
+                    try (OutputStream os =
                         new FileOutputStream(new File(destination, mithraObject.getClassName() + ".xml"))) {
                         marshaller.marshal(factory.createMithraObject(mithraObject), os);
                     }
@@ -74,13 +74,13 @@ public class Reladomo extends Task {
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 final MithraType mithra = factory.createMithraType();
                 final List<MithraObjectResourceType> mithraObjectResources = mithra.getMithraObjectResource();
-                for (final MithraObjectType mithraObject : mithraObjects) {
+                for (MithraObjectType mithraObject : mithraObjects) {
                     final MithraObjectResourceType mithraObjectResource =
                         factory.createMithraObjectResourceType();
                     mithraObjectResource.setName(mithraObject.getClassName());
                     mithraObjectResources.add(mithraObjectResource);
                 }
-                try (final OutputStream os = new FileOutputStream(new File(destination, manifest))) {
+                try (OutputStream os = new FileOutputStream(new File(destination, manifest))) {
                     marshaller.marshal(factory.createMithra(mithra), os);
                 }
             }

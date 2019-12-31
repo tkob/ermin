@@ -31,16 +31,16 @@ public class CodeResolverFactory {
 
             @Override
             public CodeResolver visit(TopDefinitions p, Void arg) {
-                Stream<CodeDef> codeDefs = filterCodeDef(p.listdef_.stream());
+                final Stream<CodeDef> codeDefs = filterCodeDef(p.listdef_.stream());
                 return fromCodeDefs(codeDefs.collect(Collectors.toList()));
             }
         }, null);
     }
 
     public CodeResolver fromCodeDefs(Iterable<CodeDef> codeDefs) {
-        Set<String> codeNames = new HashSet<String>();
+        final Set<String> codeNames = new HashSet<String>();
         codeDefs.forEach(codeDef -> {
-            String codeName = codeDef.ident_;
+            final String codeName = codeDef.ident_;
             if (codeNames.contains(codeName)) {
                 throw new RuntimeException("duplicate code definition: " + codeName);
             } else {
@@ -48,7 +48,7 @@ public class CodeResolverFactory {
             }
         });
 
-        Map<ErminName, Iterable<String>> nameToValues = new HashMap<>();
+        final Map<ErminName, Iterable<String>> nameToValues = new HashMap<>();
         codeDefs.forEach(codeDef -> {
             nameToValues.put(ErminName.fromSnake(codeDef.ident_),
                              codeDef.listcode_.stream()
@@ -77,7 +77,8 @@ public class CodeResolverFactory {
 
             @Override
             public int maxLength(ErminName name) {
-                Stream<String> codes = StreamSupport.stream(this.resolveOrThrow(name).spliterator(), false);
+                final Stream<String> codes =
+                    StreamSupport.stream(this.resolveOrThrow(name).spliterator(), false);
                 return codes.max(new Comparator<String>() {
                     @Override
                     public int compare(String code1, String code2) {
@@ -89,7 +90,7 @@ public class CodeResolverFactory {
 
     }
 
-    public Stream<CodeDef> filterCodeDef(final Stream<Def> defs) {
+    public Stream<CodeDef> filterCodeDef(Stream<Def> defs) {
         return defs.flatMap((Def def) -> def.accept(new Def.Visitor<Stream<CodeDef>, Void>() {
 
             @Override

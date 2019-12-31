@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'eclipse'
+    id 'checkstyle'
     id "io.freefair.lombok" version "3.8.1"
     id "com.diffplug.gradle.spotless" version "3.23.1"
 }
@@ -33,6 +34,13 @@ group = 'yokohama.lang'
 version = '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
+eclipse {
+    project {
+        natures 'net.sf.eclipsecs.core.CheckstyleNature'
+        buildCommand 'net.sf.eclipsecs.core.CheckstyleBuilder'
+    }
+}
+
 eclipse.jdt.file {
     withProperties { properties ->
         def formatter = new XmlSlurper().parse('config/eclipse/formatter.xml')
@@ -41,6 +49,24 @@ eclipse.jdt.file {
         }
     }
 }
+
+task dotCheckstyle {
+    doLast {
+        file(".checkstyle").text = """<?xml version="1.0" encoding="UTF-8"?>
+
+<fileset-config file-format-version="1.2.0" simple-config="true" sync-formatter="false">
+  <local-check-config name="main" location="config/checkstyle/checkstyle.xml" type="project" description="">
+    <additional-data name="protect-config-file" value="false"/>
+  </local-check-config>
+  <fileset name="all" enabled="true" check-config-name="main" local="false">
+    <file-match-pattern match-pattern="src/main" include-pattern="true"/>
+    <file-match-pattern match-pattern="src/test" include-pattern="true"/>
+  </fileset>
+</fileset-config>"""
+    }
+}
+tasks.eclipse.dependsOn(dotCheckstyle)
+
 
 spotless {
     java {
@@ -104,3 +130,10 @@ task jaxb {
 
 compileJava.dependsOn(jaxb)
 tasks.eclipse.dependsOn(jaxb)
+
+checkstyle {
+    toolVersion '8.28'
+}
+checkstyleMain {
+    source = fileTree('src/main/java')
+}

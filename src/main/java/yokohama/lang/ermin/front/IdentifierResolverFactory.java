@@ -37,17 +37,17 @@ public class IdentifierResolverFactory {
 
             @Override
             public TypeResolver visit(TopDefinitions p, Void arg) {
-                Stream<IdentifierDef> identifierDefs = filterIdentifierDef(p.listdef_.stream());
+                final Stream<IdentifierDef> identifierDefs = filterIdentifierDef(p.listdef_.stream());
                 return fromIdentifierDefs(identifierDefs.collect(Collectors.toList()));
             }
         }, null);
     }
 
     public TypeResolver fromIdentifierDefs(Iterable<IdentifierDef> identifierDefs) {
-        Set<String> identifierNames = new HashSet<String>();
+        final Set<String> identifierNames = new HashSet<String>();
 
         identifierDefs.forEach(identifierDef -> {
-            String identifierName = identifierDef.ident_;
+            final String identifierName = identifierDef.ident_;
             if (identifierNames.contains(identifierName)) {
                 throw new RuntimeException("duplicate identifier definition: " + identifierName);
             } else {
@@ -55,7 +55,7 @@ public class IdentifierResolverFactory {
             }
         });
 
-        Map<ErminName, ErminType> nameToType = new HashMap<>();
+        final Map<ErminName, ErminType> nameToType = new HashMap<>();
 
         identifierDefs.forEach(identifierDef -> {
             identifierDef.identifiertype_.accept(new IdentifierType.Visitor<Void, IdentifierDef>() {
@@ -91,7 +91,7 @@ public class IdentifierResolverFactory {
 
     }
 
-    public Stream<IdentifierDef> filterIdentifierDef(final Stream<Def> defs) {
+    public Stream<IdentifierDef> filterIdentifierDef(Stream<Def> defs) {
         return defs.flatMap(def -> def.accept(new Def.Visitor<Stream<IdentifierDef>, Void>() {
 
             @Override
