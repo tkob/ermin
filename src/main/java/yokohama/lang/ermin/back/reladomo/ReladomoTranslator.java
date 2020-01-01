@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import yokohama.lang.ermin.attribute.ErminAttribute;
+import yokohama.lang.ermin.attribute.ErminKey;
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.entity.ErminEntity;
 import yokohama.lang.ermin.front.CodeResolver;
@@ -66,14 +67,14 @@ public class ReladomoTranslator {
                 accumulatePrimaryKeys(keyEntity, entityResolver, codeResolver, attributes);
             });
         });
-        entity.getTypeKey().ifPresent(typeKey -> {
-            final AttributeType attributeType = factory.createAttributeType();
-            attributeType.setName(typeKey.getName().toLowerCamel());
-            attributeType.setColumnName(typeKey.getName().toSnake());
-            attributeType.setPrimaryKey(true);
-            typeKey.getType().accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
-            attributes.add(attributeType);
-        });
+        final ErminKey typeKey = entity.getTypeKey();
+        final AttributeType attributeType = factory.createAttributeType();
+        attributeType.setName(typeKey.getName().toLowerCamel());
+        attributeType.setColumnName(typeKey.getName().toSnake());
+        attributeType.setPrimaryKey(true);
+        typeKey.getType().accept(new ReladomoJavaTypeSetter(attributeType, codeResolver));
+        attributes.add(attributeType);
+
     }
 
     MithraObjectType entityToMithraObject(ErminEntity entity, Resolver<ErminName, ErminEntity> entityResolver,

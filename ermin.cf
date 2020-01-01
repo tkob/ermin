@@ -1,13 +1,15 @@
 TopDefinitions. Top ::= [Def] ;
 
-TypeDef.            Def ::= "type" Ident "=" Type ;
-CodeDef.            Def ::= "code" Ident "=" [Code] ;
-IdentifierDef.      Def ::= "identifier" Ident "=" IdentifierType ;
-EntityDef.          Def ::= "entity" Ident "identified" "by" [Ident] [Attribute] ;
-KeyOnlyEntityDef.   Def ::= "entity" Ident "identified" "by" [Ident] ;
-RelationshipDef.    Def ::= "relationship" Ident ":" [RelationshipType] ;
-AbstractProcessDef. Def ::= "abstract" "process" Ident "(" [Argument] ")" [Statement] ;
-terminator nonempty Def "" ;
+TypeDef.               Def ::= "type" Ident "=" Type ;
+CodeDef.               Def ::= "code" Ident "=" [Code] ;
+IdentifierDef.         Def ::= "identifier" Ident "=" IdentifierType ;
+EntityDef.             Def ::= "entity" Ident "identified" "by" Ident [Attribute] ;
+KeyOnlyEntityDef.      Def ::= "entity" Ident "identified" "by" Ident ;
+ChildEntityDef.        Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident [Attribute] ;
+KeyOnlyChildEntityDef. Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident ;
+RelationshipDef.       Def ::= "relationship" Ident ":" [RelationshipType] ;
+AbstractProcessDef.    Def ::= "abstract" "process" Ident "(" [Argument] ")" [Statement] ;
+terminator nonempty    Def "" ;
 separator nonempty Ident "*" ;
 
 CharType.                  Type ::= "char" "(" Integer ")" ;

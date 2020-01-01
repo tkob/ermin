@@ -11,12 +11,14 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.CharIdType;
+import yokohama.lang.ermin.Absyn.ChildEntityDef;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.IdentifierType;
 import yokohama.lang.ermin.Absyn.IntegerIdType;
+import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.Top;
@@ -116,6 +118,16 @@ public class IdentifierResolverFactory {
 
             @Override
             public Stream<IdentifierDef> visit(KeyOnlyEntityDef p, Void arg) {
+                return Stream.empty();
+            }
+
+            @Override
+            public Stream<IdentifierDef> visit(ChildEntityDef p, Void arg) {
+                return Stream.empty();
+            }
+
+            @Override
+            public Stream<IdentifierDef> visit(KeyOnlyChildEntityDef p, Void arg) {
                 return Stream.empty();
             }
 

@@ -11,11 +11,13 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import yokohama.lang.ermin.Absyn.AbstractProcessDef;
+import yokohama.lang.ermin.Absyn.ChildEntityDef;
 import yokohama.lang.ermin.Absyn.Code;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
+import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.StringCode;
@@ -105,6 +107,16 @@ public class CodeResolverFactory {
 
             @Override
             public Stream<CodeDef> visit(IdentifierDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
+
+            @Override
+            public Stream<CodeDef> visit(ChildEntityDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
+
+            @Override
+            public Stream<CodeDef> visit(KeyOnlyChildEntityDef p, Void arg) {
                 return Stream.<CodeDef> empty();
             }
 

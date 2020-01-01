@@ -3,7 +3,6 @@ package yokohama.lang.ermin.front;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +15,7 @@ import yokohama.lang.ermin.Yylex;
 import yokohama.lang.ermin.parser;
 import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.Argument;
+import yokohama.lang.ermin.Absyn.ChildEntityDef;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.DefaultRelationshipType;
@@ -25,8 +25,10 @@ import yokohama.lang.ermin.Absyn.ExistingEntityArgument;
 import yokohama.lang.ermin.Absyn.Exp;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.InsertStatement;
+import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.ListAttribute;
+import yokohama.lang.ermin.Absyn.ListIdent;
 import yokohama.lang.ermin.Absyn.NewEntityArgument;
 import yokohama.lang.ermin.Absyn.NumericOneOreMoreRelationshipType;
 import yokohama.lang.ermin.Absyn.NumericOneRelationshipType;
@@ -97,12 +99,12 @@ public class FrontEndProcessor {
             top.accept(new Top.Visitor<Map<ErminName, ErminEntity>, TypeResolver>() {
                 @Override
                 public Map<ErminName, ErminEntity> visit(TopDefinitions p, TypeResolver typeResolver) {
-                    final List<EntityDef> entityDefs =
+                    final List<ChildEntityDef> entityDefs =
                         filterEntityDef(p.listdef_.stream()).collect(Collectors.toList());
 
                     final List<ErminName> entityNames =
                         entityDefs.stream()
-                                  .map(entityDef -> ErminName.fromSnake(entityDef.ident_))
+                                  .map(entityDef -> ErminName.fromSnake(entityDef.ident_1))
                                   .collect(Collectors.toList());
 
                     final Map<ErminName, ErminEntity> nameToEntity = new HashMap<>();
@@ -153,33 +155,22 @@ public class FrontEndProcessor {
                               abstractProcesses);
     }
 
-    public ErminEntity toErminEntity(EntityDef entityDef, TypeResolver typeResolver,
+    public ErminEntity toErminEntity(ChildEntityDef entityDef, TypeResolver typeResolver,
             TypeResolver identifierResolver, Collection<ErminName> entityNames) {
-        final ErminName entityName = ErminName.fromSnake(entityDef.ident_);
+        final ErminName entityName = ErminName.fromSnake(entityDef.ident_1);
 
-        final List<ErminKey> identifierKeys = new ArrayList<>();
-        final List<ErminName> entityKeys = new ArrayList<>();
-        for (String keyRef : entityDef.listident_) {
-            final ErminName name = ErminName.fromSnake(keyRef);
-            identifierResolver.ifResolvedOrElse(name, type -> {
-                identifierKeys.add(new ErminKey(name, type));
-            }, () -> {
-                if (entityNames.contains(name)) {
-                    entityKeys.add(name);
+        final List<ErminName> entityKeys =
+            entityDef.listident_.stream().map(ErminName::fromSnake).map(parentName -> {
+                if (entityNames.contains(parentName)) {
+                    return parentName;
                 } else {
-                    throw new RuntimeException();
+                    throw new RuntimeException(parentName + " is not an entity name");
                 }
-            });
-        }
+            }).collect(Collectors.toList());
 
-        final Optional<ErminKey> identifierKey;
-        if (identifierKeys.isEmpty()) {
-            identifierKey = Optional.empty();
-        } else if (identifierKeys.size() == 1) {
-            identifierKey = Optional.of(identifierKeys.get(0));
-        } else {
-            throw new RuntimeException();
-        }
+        final ErminName identifierName = ErminName.fromSnake(entityDef.ident_2);
+        final ErminKey identifierKey =
+            new ErminKey(identifierName, identifierResolver.resolveOrThrow(identifierName));
 
         final List<ErminAttribute> attributes =
             entityDef.listattribute_.stream()
@@ -256,7 +247,6 @@ public class FrontEndProcessor {
             public ErminRelationshipExp visit(DefaultRelationshipType p, Void arg) {
                 return new ErminRelationshipExp(ErminMultiplicity.ZERO_OR_MORE,
                                                 ErminName.fromSnake(p.ident_));
-
             }
         }, null);
     }
@@ -330,42 +320,55 @@ public class FrontEndProcessor {
         }, null);
     }
 
-    public Stream<EntityDef> filterEntityDef(Stream<Def> defs) {
-        return defs.flatMap((Def def) -> def.accept(new Def.Visitor<Stream<EntityDef>, Void>() {
+    public Stream<ChildEntityDef> filterEntityDef(Stream<Def> defs) {
+        return defs.flatMap((Def def) -> def.accept(new Def.Visitor<Stream<ChildEntityDef>, Void>() {
 
             @Override
-            public Stream<EntityDef> visit(TypeDef p, Void arg) {
-                return Stream.<EntityDef> empty();
+            public Stream<ChildEntityDef> visit(TypeDef p, Void arg) {
+                return Stream.empty();
             }
 
             @Override
-            public Stream<EntityDef> visit(CodeDef p, Void arg) {
-                return Stream.<EntityDef> empty();
+            public Stream<ChildEntityDef> visit(CodeDef p, Void arg) {
+                return Stream.empty();
             }
 
             @Override
-            public Stream<EntityDef> visit(IdentifierDef p, Void arg) {
-                return Stream.<EntityDef> empty();
+            public Stream<ChildEntityDef> visit(IdentifierDef p, Void arg) {
+                return Stream.empty();
             }
 
             @Override
-            public Stream<EntityDef> visit(EntityDef p, Void arg) {
+            public Stream<ChildEntityDef> visit(EntityDef p, Void arg) {
+                return Stream.of(new ChildEntityDef(p.ident_1, new ListIdent(), p.ident_2, p.listattribute_));
+            }
+
+            @Override
+            public Stream<ChildEntityDef> visit(KeyOnlyEntityDef p, Void arg) {
+                return Stream.of(new ChildEntityDef(p.ident_1,
+                                                    new ListIdent(),
+                                                    p.ident_2,
+                                                    new ListAttribute()));
+            }
+
+            @Override
+            public Stream<ChildEntityDef> visit(ChildEntityDef p, Void arg) {
                 return Stream.of(p);
             }
 
             @Override
-            public Stream<EntityDef> visit(KeyOnlyEntityDef p, Void arg) {
-                return Stream.of(new EntityDef(p.ident_, p.listident_, new ListAttribute()));
+            public Stream<ChildEntityDef> visit(KeyOnlyChildEntityDef p, Void arg) {
+                return Stream.of(new ChildEntityDef(p.ident_1, p.listident_, p.ident_2, new ListAttribute()));
             }
 
             @Override
-            public Stream<EntityDef> visit(RelationshipDef p, Void arg) {
-                return Stream.<EntityDef> empty();
+            public Stream<ChildEntityDef> visit(RelationshipDef p, Void arg) {
+                return Stream.empty();
             }
 
             @Override
-            public Stream<EntityDef> visit(AbstractProcessDef p, Void arg) {
-                return Stream.<EntityDef> empty();
+            public Stream<ChildEntityDef> visit(AbstractProcessDef p, Void arg) {
+                return Stream.empty();
             }
         }, null));
     }
@@ -399,6 +402,16 @@ public class FrontEndProcessor {
             }
 
             @Override
+            public Stream<RelationshipDef> visit(ChildEntityDef p, Void arg) {
+                return Stream.<RelationshipDef> empty();
+            }
+
+            @Override
+            public Stream<RelationshipDef> visit(KeyOnlyChildEntityDef p, Void arg) {
+                return Stream.<RelationshipDef> empty();
+            }
+
+            @Override
             public Stream<RelationshipDef> visit(RelationshipDef p, Void arg) {
                 return Stream.of(p);
             }
@@ -407,6 +420,7 @@ public class FrontEndProcessor {
             public Stream<RelationshipDef> visit(AbstractProcessDef p, Void arg) {
                 return Stream.<RelationshipDef> empty();
             }
+
         }, null));
     }
 
@@ -429,6 +443,16 @@ public class FrontEndProcessor {
             }
 
             @Override
+            public Stream<AbstractProcessDef> visit(ChildEntityDef p, Void arg) {
+                return Stream.empty();
+            }
+
+            @Override
+            public Stream<AbstractProcessDef> visit(KeyOnlyChildEntityDef p, Void arg) {
+                return Stream.empty();
+            }
+
+            @Override
             public Stream<AbstractProcessDef> visit(EntityDef p, Void arg) {
                 return Stream.empty();
             }
@@ -447,6 +471,7 @@ public class FrontEndProcessor {
             public Stream<AbstractProcessDef> visit(AbstractProcessDef p, Void arg) {
                 return Stream.of(p);
             }
+
         }, null));
     }
 }

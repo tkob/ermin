@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import yokohama.lang.ermin.Absyn.AbstractProcessDef;
 import yokohama.lang.ermin.Absyn.BlobType;
 import yokohama.lang.ermin.Absyn.CharType;
+import yokohama.lang.ermin.Absyn.ChildEntityDef;
 import yokohama.lang.ermin.Absyn.ClobType;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.DateType;
@@ -23,6 +24,7 @@ import yokohama.lang.ermin.Absyn.EntityDef;
 import yokohama.lang.ermin.Absyn.IdentType;
 import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.IntegerType;
+import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
 import yokohama.lang.ermin.Absyn.Top;
@@ -209,6 +211,16 @@ public class TypeResolverFactory {
 
             @Override
             public Stream<TypeDef> visit(KeyOnlyEntityDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
+
+            @Override
+            public Stream<TypeDef> visit(ChildEntityDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
+
+            @Override
+            public Stream<TypeDef> visit(KeyOnlyChildEntityDef p, Void arg) {
                 return Stream.<TypeDef> empty();
             }
 
