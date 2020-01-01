@@ -121,8 +121,7 @@ public class ReladomoTranslator {
     void relationshipToMithraObject(ErminRelationship relationship,
             Resolver<ErminName, ErminEntity> entityResolver, CodeResolver codeResolver,
             Map<ErminName, MithraObjectType> mithraObjects) {
-        final Iterable<ErminName> exps =
-            relationship.getExps().stream().map(exp -> exp.getName()).collect(Collectors.toList());
+        final Iterable<ErminName> exps = relationship.getEntityNames();
 
         final MithraObjectType mithraObject = factory.createMithraObjectType();
         mithraObject.setObjectType(ObjectType.TRANSACTIONAL);

@@ -62,9 +62,11 @@ import yokohama.lang.ermin.process.ErminStatement;
 import yokohama.lang.ermin.process.ErminTupleExp;
 import yokohama.lang.ermin.process.ErminUpdateStatement;
 import yokohama.lang.ermin.process.ErminVarExp;
+import yokohama.lang.ermin.relationship.ErminBinaryRelationship;
 import yokohama.lang.ermin.relationship.ErminMultiplicity;
-import yokohama.lang.ermin.relationship.ErminRelationship;
+import yokohama.lang.ermin.relationship.ErminMultiRelationship;
 import yokohama.lang.ermin.relationship.ErminRelationshipExp;
+import yokohama.lang.ermin.relationship.ErminRelationship;
 
 public class FrontEndProcessor {
 
@@ -186,12 +188,24 @@ public class FrontEndProcessor {
         final List<ErminRelationshipExp> exps =
             relationshipDef.listrelationshiptype_.stream()
                                                  .map(this::toErminRelationshipExp)
+
                                                  .collect(Collectors.toList());
-        if (exps.size() >= 3
-                && exps.stream().anyMatch(exp -> exp.getMultiplicity() != ErminMultiplicity.ZERO_OR_MORE)) {
-            throw new RuntimeException("multirelation cannot have multiplicity other than zero or more");
+        if (exps.size() == 1) {
+            return new ErminMultiRelationship(name,
+                                              exps.stream()
+                                                  .map(ErminRelationshipExp::getName)
+                                                  .collect(Collectors.toList()));
+        } else if (exps.size() == 2) {
+            return new ErminBinaryRelationship(name, exps.get(0), exps.get(1));
+        } else {
+            if (exps.stream().anyMatch(exp -> exp.getMultiplicity() != ErminMultiplicity.ZERO_OR_MORE)) {
+                throw new RuntimeException("multirelation cannot have multiplicity other than zero or more");
+            }
+            return new ErminMultiRelationship(name,
+                                              exps.stream()
+                                                  .map(ErminRelationshipExp::getName)
+                                                  .collect(Collectors.toList()));
         }
-        return new ErminRelationship(name, exps);
     }
 
     public ErminRelationshipExp toErminRelationshipExp(RelationshipType relationshiptype_) {
