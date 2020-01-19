@@ -230,6 +230,12 @@ public class AlloyTranslator {
         });
     }
 
+    /**
+     * Generate Alloy predicates which represent abstract processes.
+     * @param erminTuple ErminTuple from which predicates are made
+     * @param genSym GenSym
+     * @return Predicates
+     */
     private Collection<Paragraph> abstractProcessPredicates(ErminTuple erminTuple, GenSym genSym) {
         final List<Paragraph> paragraphs = new ArrayList<>();
         for (ErminAbstractProcess abstractProcess : erminTuple.getAbstractProcesses()) {
