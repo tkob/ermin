@@ -1,7 +1,7 @@
 package yokohama.lang.ermin.back.alloy.ast;
 
 public enum BinOp {
-    OR, DOT, PLUS, MINUS;
+    OR, DOT, PLUS, MINUS, OVERRIDE, ARROW;
 
     public String toString() {
         switch (this) {
@@ -13,6 +13,10 @@ public enum BinOp {
                 return "+";
             case MINUS:
                 return "-";
+            case OVERRIDE:
+                return "++";
+            case ARROW:
+                return "->";
             default:
                 throw new IllegalStateException("should never reach here");
         }

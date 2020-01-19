@@ -50,4 +50,12 @@ public class BinOpExpr implements Expr {
     public static Expr or(Expr left, Expr right) {
         return new BinOpExpr(left, BinOp.OR, right);
     }
+
+    public static BinOpExpr override(Expr left, Expr right) {
+        return new BinOpExpr(left, BinOp.OVERRIDE, right);
+    }
+
+    public static BinOpExpr arrow(Expr left, Expr right) {
+        return new BinOpExpr(left, BinOp.ARROW, right);
+    }
 }

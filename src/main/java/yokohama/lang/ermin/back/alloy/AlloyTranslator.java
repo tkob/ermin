@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import yokohama.lang.ermin.attribute.ErminName;
 import yokohama.lang.ermin.back.alloy.ast.AlloyModule;
@@ -322,8 +323,69 @@ public class AlloyTranslator {
 
                     @Override
                     public List<Expr> visitUpdateStatement(ErminUpdateStatement updateStatement) {
-                        // TODO Auto-generated method stub
-                        return null;
+                        final ErminName relationshipName = updateStatement.getLvalue();
+                        final ErminRelationship relationship =
+                            erminTuple.getRelationships()
+                                      .stream()
+                                      .filter(r -> r.getName().equals(relationshipName))
+                                      .findFirst()
+                                      .orElseThrow(() -> new IllegalStateException(relationshipName.toSnake()
+                                              + " is not relationship"));
+                        if (!(relationship instanceof ErminBinaryRelationship)) {
+                            throw new IllegalStateException(relationshipName.toSnake()
+                                    + " is not binary relationship");
+                        }
+                        final ErminBinaryRelationship binaryRelationship =
+                            (ErminBinaryRelationship) relationship;
+                        switch (binaryRelationship.getLeft().getMultiplicity()) {
+                            case ONE:
+                            case ZERO_OR_ONE:
+                                switch (binaryRelationship.getRight().getMultiplicity()) {
+                                    case ONE:
+                                    case ZERO_OR_ONE:
+                                        throw new IllegalStateException("cannot determine key for update");
+                                    case ZERO_OR_MORE:
+                                    case ONE_OR_MORE:
+                                        throw new UnsupportedOperationException("unimplemented");
+                                }
+                                break;
+                            case ZERO_OR_MORE:
+                            case ONE_OR_MORE:
+                                switch (binaryRelationship.getRight().getMultiplicity()) {
+                                    case ONE:
+                                    case ZERO_OR_ONE:
+                                        final Expr tuple =
+                                            tupleOf(updateStatement.getExps()
+                                                                   .stream()
+                                                                   .map(this::erminExpToAlloyExpr)
+                                                                   .collect(Collectors.toList()));
+
+                                        // relationship' ++ tuple
+                                        final Expr insert =
+                                            BinOpExpr.override(QualNameExpr.of(lastUpdated.get(relationshipName)),
+                                                               tuple);
+
+                                        final String lvalue =
+                                            genLocalVar.gen(relationshipName.toLowerCamel());
+                                        lastUpdated.put(relationshipName, lvalue);
+
+                                        // relationship'' = relationship' ++ tuple
+                                        final List<LetDecl> letDecls =
+                                            Collections.singletonList(new LetDecl(lvalue, insert));
+
+                                        final List<Expr> body = new ArrayList<>();
+                                        // let relationship'' = relationship' ++ tuple { ... }
+                                        blockToAppend.add(new LetExpr(letDecls, new Block(body)));
+
+                                        return body;
+                                    case ZERO_OR_MORE:
+                                    case ONE_OR_MORE:
+                                        throw new IllegalStateException("cannot determine key for update");
+
+                                }
+                                break;
+                        }
+                        throw new IllegalStateException("should never reach here");
                     }
                 });
             }
@@ -349,6 +411,14 @@ public class AlloyTranslator {
             paragraphs.add(predDecl);
         }
         return paragraphs;
+    }
+
+    private Expr tupleOf(List<Expr> exprs) {
+        Expr tuple = exprs.get(0);
+        for (int i = 1; i < exprs.size(); i++) {
+            tuple = BinOpExpr.arrow(tuple, exprs.get(i));
+        }
+        return tuple;
     }
 
     private Collection<Paragraph> initPredicate(ErminTuple erminTuple, GenSym genSym) {
