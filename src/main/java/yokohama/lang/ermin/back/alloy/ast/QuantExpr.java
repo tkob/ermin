@@ -52,6 +52,13 @@ public class QuantExpr implements Expr {
         return new QuantExpr(quant, Arrays.asList(Decl.of(name, expr)), Arrays.asList(exprs));
     }
 
+    /**
+     * Create a universally quantified expression.
+     * @param name Name of variable
+     * @param expr Domain of variable
+     * @param exprs Quantified expressions
+     * @return universally quantified expression
+     */
     public static QuantExpr all(String name, Expr expr, Expr... exprs) {
         return QuantExpr.of(Quant.ALL, name, expr, exprs);
     }
