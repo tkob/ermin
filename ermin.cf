@@ -7,7 +7,8 @@ KeyOnlyEntityDef.      Def ::= "entity" Ident "identified" "by" Ident ":" Type ;
 ChildEntityDef.        Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident ":" Type [Attribute] ;
 KeyOnlyChildEntityDef. Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident ":" Type ;
 RelationshipDef.       Def ::= "relationship" Ident ":" [RelationshipType] ;
-AbstractProcessDef.    Def ::= "abstract" "process" Ident "(" [Argument] ")" [Statement] ;
+AbstractProcessDef.    Def ::= "abstract" "process" Ident "(" [Argument] ")" "do" [Statement] "end" ;
+GuardedProcessDef.     Def ::= "abstract" "process" Ident "(" [Argument] ")" "guard" [BoolExp] "do" [Statement] "end" ;
 terminator nonempty    Def "" ;
 separator nonempty Ident "*" ;
 
@@ -53,6 +54,15 @@ separator nonempty Statement "" ;
 VarExp.   Exp ::= Ident ;
 TupleExp. Exp ::= "<" [Exp] ">" ;
 separator nonempty Exp "," ;
+
+UniversalBoolExp. BoolExp  ::= "for" "all" [Decl] BoolExp ;
+EqualBoolExp.     BoolExp1 ::= Exp "=" Exp ;
+NotEqualBoolExp.  BoolExp1 ::= Exp "!=" Exp ;
+coercions BoolExp 1 ;
+terminator nonempty BoolExp "" ;
+
+InDecl. Decl ::= Ident ":" Ident ;
+separator nonempty Decl "," ;
 
 comment "--" ;
 comment "{-" "-}" ;

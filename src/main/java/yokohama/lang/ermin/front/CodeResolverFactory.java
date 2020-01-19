@@ -16,6 +16,7 @@ import yokohama.lang.ermin.Absyn.Code;
 import yokohama.lang.ermin.Absyn.CodeDef;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
+import yokohama.lang.ermin.Absyn.GuardedProcessDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
 import yokohama.lang.ermin.Absyn.RelationshipDef;
@@ -131,6 +132,11 @@ public class CodeResolverFactory {
 
             @Override
             public Stream<CodeDef> visit(AbstractProcessDef p, Void arg) {
+                return Stream.<CodeDef> empty();
+            }
+
+            @Override
+            public Stream<CodeDef> visit(GuardedProcessDef p, Void arg) {
                 return Stream.<CodeDef> empty();
             }
         }, null));

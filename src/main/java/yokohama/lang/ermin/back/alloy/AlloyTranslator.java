@@ -37,15 +37,21 @@ import yokohama.lang.ermin.front.ErminTuple;
 import yokohama.lang.ermin.process.ErminAbstractProcess;
 import yokohama.lang.ermin.process.ErminArgument;
 import yokohama.lang.ermin.process.ErminArgumentVisitor;
+import yokohama.lang.ermin.process.ErminBoolExp;
+import yokohama.lang.ermin.process.ErminBoolExpVisitor;
+import yokohama.lang.ermin.process.ErminDecl;
 import yokohama.lang.ermin.process.ErminDeleteStatement;
+import yokohama.lang.ermin.process.ErminEqualBoolExp;
 import yokohama.lang.ermin.process.ErminExistingEntityArgument;
 import yokohama.lang.ermin.process.ErminExp;
 import yokohama.lang.ermin.process.ErminExpVisitor;
 import yokohama.lang.ermin.process.ErminInsertStatement;
 import yokohama.lang.ermin.process.ErminNewEntityArgument;
+import yokohama.lang.ermin.process.ErminNotEqualBoolExp;
 import yokohama.lang.ermin.process.ErminStatement;
 import yokohama.lang.ermin.process.ErminStatementVisitor;
 import yokohama.lang.ermin.process.ErminTupleExp;
+import yokohama.lang.ermin.process.ErminUniversalBoolExp;
 import yokohama.lang.ermin.process.ErminUpdateStatement;
 import yokohama.lang.ermin.process.ErminVarExp;
 import yokohama.lang.ermin.relationship.ErminBinaryRelationship;
@@ -175,6 +181,55 @@ public class AlloyTranslator {
         return Collections.singletonList(noOrphanEntities);
     }
 
+    private Decl toAlloyDecl(ErminDecl decl) {
+        return Decl.of(decl.getVarName().toLowerCamel(),
+                       QualNameExpr.of(decl.getEntityName().toUpperCamel()));
+    }
+
+    private Expr toAlloyExpr(ErminBoolExp boolExp) {
+        final AlloyTranslator t = this;
+        return boolExp.accept(new ErminBoolExpVisitor<Expr>() {
+
+            @Override
+            public Expr visitUniversalBoolExp(ErminUniversalBoolExp universalBoolExp) {
+                return new QuantExpr(Quant.ALL,
+                                     universalBoolExp.getDecls()
+                                                     .stream()
+                                                     .map(t::toAlloyDecl)
+                                                     .collect(Collectors.toList()),
+                                     Collections.singletonList(toAlloyExpr(universalBoolExp.getBody())));
+            }
+
+            @Override
+            public Expr visitEqualBoolExp(ErminEqualBoolExp equalBoolExp) {
+                return CompareExpr.eq(toAlloyExpr(equalBoolExp.getLeft()),
+                                      toAlloyExpr(equalBoolExp.getRight()));
+            }
+
+            @Override
+            public Expr visitNotEqualBoolExp(ErminNotEqualBoolExp notEqualBoolExp) {
+                return CompareExpr.notEq(toAlloyExpr(notEqualBoolExp.getLeft()),
+                                      toAlloyExpr(notEqualBoolExp.getRight()));
+            }
+        });
+    }
+
+    private Expr toAlloyExpr(ErminExp erminExp) {
+        final AlloyTranslator t = this;
+        return erminExp.accept(new ErminExpVisitor<Expr>() {
+
+            @Override
+            public Expr visitVarExp(ErminVarExp varExp) {
+                return QualNameExpr.of(varExp.getName());
+            }
+
+            @Override
+            public Expr visitTupleExp(ErminTupleExp tupleExp) {
+                return tupleOf(tupleExp.getExps().stream().map(t::toAlloyExpr).collect(Collectors.toList()));
+            }
+        });
+    }
+
     private Collection<Paragraph> abstractProcessPredicates(ErminTuple erminTuple, GenSym genSym) {
         final List<Paragraph> paragraphs = new ArrayList<>();
         for (ErminAbstractProcess abstractProcess : erminTuple.getAbstractProcesses()) {
@@ -197,7 +252,7 @@ public class AlloyTranslator {
 
             final List<Expr> exprs = new ArrayList<>();
 
-            // Construct guard conditions
+            // Construct guard conditions from arguments
             for (ErminArgument argument : abstractProcess.getArguments()) {
                 final ErminName entityName = argument.getEntityName();
                 // t.entity
@@ -219,6 +274,10 @@ public class AlloyTranslator {
                         return CompareExpr.in(QualNameExpr.of(argumentName), currEntities);
                     }
                 }));
+            }
+            // Construct guard conditions from guard clause
+            for (ErminBoolExp guard : abstractProcess.getGuards()) {
+                exprs.add(toAlloyExpr(guard));
             }
 
             // Construct body

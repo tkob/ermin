@@ -21,6 +21,7 @@ import yokohama.lang.ermin.Absyn.DecimalPrecisionType;
 import yokohama.lang.ermin.Absyn.DecimalType;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
+import yokohama.lang.ermin.Absyn.GuardedProcessDef;
 import yokohama.lang.ermin.Absyn.IdentType;
 import yokohama.lang.ermin.Absyn.IntegerType;
 import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
@@ -225,6 +226,11 @@ public class TypeResolverFactory {
 
             @Override
             public Stream<TypeDef> visit(AbstractProcessDef p, Void arg) {
+                return Stream.<TypeDef> empty();
+            }
+
+            @Override
+            public Stream<TypeDef> visit(GuardedProcessDef p, Void arg) {
                 return Stream.<TypeDef> empty();
             }
         }, null));

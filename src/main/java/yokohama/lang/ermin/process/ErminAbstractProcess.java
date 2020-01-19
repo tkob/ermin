@@ -11,5 +11,7 @@ public class ErminAbstractProcess {
 
     private final List<ErminArgument> arguments;
 
+    private final List<ErminBoolExp> guards;
+
     private final List<ErminStatement> statements;
 }

@@ -43,4 +43,8 @@ public class CompareExpr implements Expr {
     public static CompareExpr eq(Expr left, Expr right) {
         return new CompareExpr(left, false, CompareOp.EQ, right);
     }
+
+    public static CompareExpr notEq(Expr left, Expr right) {
+        return new CompareExpr(left, true, CompareOp.EQ, right);
+    }
 }
