@@ -2,11 +2,10 @@ TopDefinitions. Top ::= [Def] ;
 
 TypeDef.               Def ::= "type" Ident "=" Type ;
 CodeDef.               Def ::= "code" Ident "=" [Code] ;
-IdentifierDef.         Def ::= "identifier" Ident "=" IdentifierType ;
-EntityDef.             Def ::= "entity" Ident "identified" "by" Ident [Attribute] ;
-KeyOnlyEntityDef.      Def ::= "entity" Ident "identified" "by" Ident ;
-ChildEntityDef.        Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident [Attribute] ;
-KeyOnlyChildEntityDef. Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident ;
+EntityDef.             Def ::= "entity" Ident "identified" "by" Ident ":" Type [Attribute] ;
+KeyOnlyEntityDef.      Def ::= "entity" Ident "identified" "by" Ident ":" Type ;
+ChildEntityDef.        Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident ":" Type [Attribute] ;
+KeyOnlyChildEntityDef. Def ::= "entity" Ident "belongs" "to" [Ident] "identified" "by" Ident ":" Type ;
 RelationshipDef.       Def ::= "relationship" Ident ":" [RelationshipType] ;
 AbstractProcessDef.    Def ::= "abstract" "process" Ident "(" [Argument] ")" [Statement] ;
 terminator nonempty    Def "" ;
@@ -22,10 +21,6 @@ DecimalPrecisionScaleType. Type ::= "decimal" "(" Integer "," Integer ")" ;
 IntegerType.               Type ::= "integer" ;
 DateType.                  Type ::= "date" ;
 IdentType.                 Type ::= Ident ; -- identifier can refer to type or code
-
-CharIdType.    IdentifierType ::= "char" "(" Integer ")" ;
-VarCharIdType. IdentifierType ::= "varchar" "(" Integer ")" ;
-IntegerIdType. IdentifierType ::= "integer" ;
 
 OneRelationshipType.               RelationshipType ::= "one" Ident ;
 ZeroOrOneRelationshipType.         RelationshipType ::= "zero" "or" "one" Ident ;

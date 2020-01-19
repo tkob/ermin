@@ -22,7 +22,6 @@ import yokohama.lang.ermin.Absyn.DecimalType;
 import yokohama.lang.ermin.Absyn.Def;
 import yokohama.lang.ermin.Absyn.EntityDef;
 import yokohama.lang.ermin.Absyn.IdentType;
-import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.IntegerType;
 import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
@@ -196,11 +195,6 @@ public class TypeResolverFactory {
 
             @Override
             public Stream<TypeDef> visit(CodeDef p, Void arg) {
-                return Stream.<TypeDef> empty();
-            }
-
-            @Override
-            public Stream<TypeDef> visit(IdentifierDef p, Void arg) {
                 return Stream.<TypeDef> empty();
             }
 

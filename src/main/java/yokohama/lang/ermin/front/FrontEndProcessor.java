@@ -23,7 +23,6 @@ import yokohama.lang.ermin.Absyn.DeleteStatement;
 import yokohama.lang.ermin.Absyn.EntityDef;
 import yokohama.lang.ermin.Absyn.ExistingEntityArgument;
 import yokohama.lang.ermin.Absyn.Exp;
-import yokohama.lang.ermin.Absyn.IdentifierDef;
 import yokohama.lang.ermin.Absyn.InsertStatement;
 import yokohama.lang.ermin.Absyn.KeyOnlyChildEntityDef;
 import yokohama.lang.ermin.Absyn.KeyOnlyEntityDef;
@@ -63,10 +62,10 @@ import yokohama.lang.ermin.process.ErminTupleExp;
 import yokohama.lang.ermin.process.ErminUpdateStatement;
 import yokohama.lang.ermin.process.ErminVarExp;
 import yokohama.lang.ermin.relationship.ErminBinaryRelationship;
-import yokohama.lang.ermin.relationship.ErminMultiplicity;
 import yokohama.lang.ermin.relationship.ErminMultiRelationship;
-import yokohama.lang.ermin.relationship.ErminRelationshipExp;
+import yokohama.lang.ermin.relationship.ErminMultiplicity;
 import yokohama.lang.ermin.relationship.ErminRelationship;
+import yokohama.lang.ermin.relationship.ErminRelationshipExp;
 
 public class FrontEndProcessor {
 
@@ -77,8 +76,6 @@ public class FrontEndProcessor {
     CodeResolverFactory codeResolverFactory = new CodeResolverFactory();
 
     TypeResolverFactory typeResolverFactory = new TypeResolverFactory();
-
-    IdentifierResolverFactory identifierResolverFactory = new IdentifierResolverFactory();
 
     public ErminTuple process(InputStream is) throws Exception {
         final Yylex l = new Yylex(new InputStreamReader(is));
@@ -95,7 +92,6 @@ public class FrontEndProcessor {
     public ErminTuple process(Top top) {
         final CodeResolver codeResolver = codeResolverFactory.fromAbsyn(top);
         final TypeResolver typeResolver = typeResolverFactory.fromAbsyn(top, codeResolver);
-        final TypeResolver identifierResolver = identifierResolverFactory.fromAbsyn(top);
 
         final Map<ErminName, ErminEntity> nameToEntity =
             top.accept(new Top.Visitor<Map<ErminName, ErminEntity>, TypeResolver>() {
@@ -111,8 +107,7 @@ public class FrontEndProcessor {
 
                     final Map<ErminName, ErminEntity> nameToEntity = new HashMap<>();
                     entityDefs.forEach(entityDef -> {
-                        final ErminEntity entity =
-                            toErminEntity(entityDef, typeResolver, identifierResolver, entityNames);
+                        final ErminEntity entity = toErminEntity(entityDef, typeResolver, entityNames);
                         nameToEntity.put(entity.getName(), entity);
                     });
                     return nameToEntity;
@@ -158,7 +153,7 @@ public class FrontEndProcessor {
     }
 
     public ErminEntity toErminEntity(ChildEntityDef entityDef, TypeResolver typeResolver,
-            TypeResolver identifierResolver, Collection<ErminName> entityNames) {
+            Collection<ErminName> entityNames) {
         final ErminName entityName = ErminName.fromSnake(entityDef.ident_1);
 
         final List<ErminName> entityKeys =
@@ -172,7 +167,7 @@ public class FrontEndProcessor {
 
         final ErminName identifierName = ErminName.fromSnake(entityDef.ident_2);
         final ErminKey identifierKey =
-            new ErminKey(identifierName, identifierResolver.resolveOrThrow(identifierName));
+            new ErminKey(identifierName, entityDef.type_.accept(absynTypeToErminType, typeResolver));
 
         final List<ErminAttribute> attributes =
             entityDef.listattribute_.stream()
@@ -348,13 +343,12 @@ public class FrontEndProcessor {
             }
 
             @Override
-            public Stream<ChildEntityDef> visit(IdentifierDef p, Void arg) {
-                return Stream.empty();
-            }
-
-            @Override
             public Stream<ChildEntityDef> visit(EntityDef p, Void arg) {
-                return Stream.of(new ChildEntityDef(p.ident_1, new ListIdent(), p.ident_2, p.listattribute_));
+                return Stream.of(new ChildEntityDef(p.ident_1,
+                                                    new ListIdent(),
+                                                    p.ident_2,
+                                                    p.type_,
+                                                    p.listattribute_));
             }
 
             @Override
@@ -362,6 +356,7 @@ public class FrontEndProcessor {
                 return Stream.of(new ChildEntityDef(p.ident_1,
                                                     new ListIdent(),
                                                     p.ident_2,
+                                                    p.type_,
                                                     new ListAttribute()));
             }
 
@@ -372,7 +367,11 @@ public class FrontEndProcessor {
 
             @Override
             public Stream<ChildEntityDef> visit(KeyOnlyChildEntityDef p, Void arg) {
-                return Stream.of(new ChildEntityDef(p.ident_1, p.listident_, p.ident_2, new ListAttribute()));
+                return Stream.of(new ChildEntityDef(p.ident_1,
+                                                    p.listident_,
+                                                    p.ident_2,
+                                                    p.type_,
+                                                    new ListAttribute()));
             }
 
             @Override
@@ -397,11 +396,6 @@ public class FrontEndProcessor {
 
             @Override
             public Stream<RelationshipDef> visit(CodeDef p, Void arg) {
-                return Stream.<RelationshipDef> empty();
-            }
-
-            @Override
-            public Stream<RelationshipDef> visit(IdentifierDef p, Void arg) {
                 return Stream.<RelationshipDef> empty();
             }
 
@@ -448,11 +442,6 @@ public class FrontEndProcessor {
 
             @Override
             public Stream<AbstractProcessDef> visit(CodeDef p, Void arg) {
-                return Stream.empty();
-            }
-
-            @Override
-            public Stream<AbstractProcessDef> visit(IdentifierDef p, Void arg) {
                 return Stream.empty();
             }
 
