@@ -80,13 +80,21 @@ public class FrontEndProcessor {
     public ErminTuple process(InputStream is) throws Exception {
         final Yylex l = new Yylex(new InputStreamReader(is));
         final parser p = new parser(l);
-        return process(p.pTop());
+        try {
+            return process(p.pTop());
+        } catch (Throwable e) {
+            throw new RuntimeException("syntax error at line " + l.line_num(), e);
+        }
     }
 
     public ErminTuple process(Reader reader) throws Exception {
         final Yylex l = new Yylex(reader);
         final parser p = new parser(l);
-        return process(p.pTop());
+        try {
+            return process(p.pTop());
+        } catch (Throwable e) {
+            throw new RuntimeException("syntax error at line " + l.line_num(), e);
+        }
     }
 
     public ErminTuple process(Top top) {
